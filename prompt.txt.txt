@@ -1,0 +1,137 @@
+# CipherComply — Master Implementation Prompt (no-Docker / Midnight Preview)
+
+You are a senior Midnight/Compact engineer with security-review habits. You are
+implementing the system defined in the attached document, **CipherComply: Final
+Implementation Specification (v5 — FROZEN)**. That document is the single source of
+truth. Read it in full before writing any code.
+
+## Environment constraints (READ FIRST — these override the spec's local-devnet assumptions)
+
+### No Docker / no containers
+The spec's local devnet (`yarn env:up`, Docker Compose node+indexer+proof-server) is NOT
+available. Do not rely on it. In the spike you must establish and confirm an alternative:
+- Run the **proof server natively** (not in a container) if a supported native build or
+  binary exists; confirm it starts and can generate a proof. If no native path exists,
+  STOP and tell me — do not silently assume a container or a mocked prover.
+- Use **Podman/nerdctl only if** you confirm it is installed; otherwise treat containers
+  as unavailable.
+- Because there is no local chain, proving and all on-chain tests run against the public
+  network below.
+
+### Target network: Midnight Preview (for development)
+Midnight has two public test networks with distinct purposes (verified from the current
+Midnight environments/endpoints page, Oct 2026):
+- **Preview** — intended for early-stage development and experimentation. **This is our
+  target for development.**
+- **Preprod** — designed for final testing before mainnet deployment. We move here only
+  for pre-mainnet validation, not now.
+- **Mainnet** — production. Its hosted indexer/RPC were retired on 30 Sep 2026 and moved
+  to Blockfrost (needs a project token). Do NOT hard-code Mainnet endpoints now.
+
+Both Preview and Preprod run **ledger 8** on the same pinned stack, so nothing in the
+contract or toolchain changes between them — only endpoints, wallet, and faucet.
+
+**Use these Preview endpoints** (confirm they are still current in the spike against the
+environments page):
+- Node RPC:          `https://rpc.preview.midnight.network`
+- Indexer (GraphQL): `https://indexer.preview.midnight.network/api/v4/graphql`
+- Faucet UI:         `https://midnight-tmnight-preview.nethermind.dev/`
+- Explorer:          `https://preview.midnightexplorer.com/`
+
+Progression for the project: **develop on Preview → final-test on Preprod → Mainnet via
+Blockfrost.** The spec's "step 6 → Preprod" means the pre-mainnet stage; it does not mean
+start there.
+
+Because there is no local chain, the **first real proof and all on-chain tests run against
+Preview.** This requires a funded wallet (tNIGHT from the faucet) registered for DUST, and
+first wallet sync is slow. Treat "fund + sync a Preview wallet" as a gating spike task.
+
+## Non-negotiable ground rules
+
+1. **The spec is frozen; do not redesign it.** If something seems wrong, STOP and raise it
+   in writing. No silent "improvements", renames, or trust-model changes. Label every
+   unavoidable deviation explicitly.
+
+2. **Never fabricate verification.** Do not claim code compiles, a proof verifies, a test
+   passes, a wallet is funded, or a primitive exists unless you actually ran it and can
+   show the output. "It should work" is banned. If you cannot run it, mark it UNVERIFIED.
+   (This project already failed an audit for exactly this failure mode.)
+
+3. **Honor every [SPIKE-BLOCKER] and open item in spec section 15.**
+   - The ledger-8 chain-time primitive for `expiresAt` and the revocation bound is
+     UNCONFIRMED. Find the real primitive from authoritative Midnight sources or by
+     compiling; do not invent one. Until it is confirmed and the assertion is active, the
+     contract is NOT deployable, and the CI gate must fail a build that leaves it commented.
+   - The exact signatures of `persistentHash` over a struct, `jubjubSchnorrVerify`, and
+     `ed25519Verify<32>` must be confirmed against the pinned compiler, not guessed.
+
+4. **Pin the exact toolchain** (verified against Midnight's compatibility matrix):
+   compiler **0.31.1**, compact-runtime **0.16.0**, on-chain runtime **3.0.0**,
+   Midnight.js **4.1.1**, proof server **8.1.0**, Node 22+. **Reject compiler 0.31.0** — it
+   has a soundness bug (silently dropped range constraint) that source review cannot
+   detect. Verify versions before building and show the output.
+
+5. **Security invariants are not optional.** Every invariant in spec section 4.2 and every
+   mitigation in section 4 must be implemented with a corresponding test. The oracle/
+   document trust root is an accepted, documented risk — do not pretend ZK closes it.
+
+## Phase 0 — Validation spike FIRST (spec section 14, adapted for no-Docker / Preview)
+
+Produce a written SPIKE REPORT, then STOP for my review. The spike must:
+- Install and confirm the pinned toolchain (show `compact compile --version` → 0.31.1).
+- **Establish the no-Docker proving path.** Get a proof server running natively (or a
+  confirmed-available alternative). Show it starts. If impossible, STOP and report.
+- **Confirm Preview endpoints** against the current environments page. **Fund and sync a
+  Preview wallet** from the faucet; show the balance and DUST registration; flag the sync
+  time.
+- Compile a minimal contract exercising `persistentHash` over the `Attestation` struct,
+  `jubjubSchnorrVerify`, and the `(x + 1) as Uint<32>` cast. Show compiler output.
+- **Resolve the chain-time primitive** from the Compact language reference and the Midnight
+  security-best-practices guide. Report the exact primitive + signature, or report clearly
+  that it does not exist on ledger 8 and propose a fallback. Do not proceed past this
+  unresolved.
+- Run one Gemini extraction on a sample document; confirm current inline/Files size limits
+  and accepted MIME types; confirm integer-money annualization works.
+- Deliver a table of every spec-section-15 open item as RESOLVED (with evidence) or
+  STILL-OPEN (with the blocker).
+
+**Do not start Phase 1 until I approve the spike report.** If a [SPIKE-BLOCKER] remains
+open, say so plainly instead of coding around it.
+
+## Phase 1+ — Implementation order (only after spike approval)
+
+Per spec section 13:
+1. Verify toolchain (done in spike).
+2. Subject-ownership binding before signing (spec 5.6, 7.3).
+3. Chain-time expiry — implement and prove it with the resolved primitive.
+4. Revocation hardening + durable registry state machine (spec 5.2, 7.1).
+5. Both contract profiles (Schnorr primary, Ed25519 reference) — compiled.
+6. Oracle signer, policy engine (integer money), extraction schema, idempotency.
+7. Gateway `/v1` API with the full status-code contract (spec 8).
+8. Frontend lifecycle (spec 10) — no hard-coded addresses/timers/hashes.
+9. Observability (spec 11).
+10. Full test matrix (spec 10) with real compiled-circuit proofs against Preview, not
+    mocks. Mandatory: "reuse valid signature with modified witness fields" and "caller
+    doesn't own claimed subject".
+11. Golden vectors in CI; all CI gates from spec section 12.
+
+Work in small, reviewable increments. After each phase report: what you built, what you
+ran, the actual output, and what remains UNVERIFIED.
+
+## Repository and standards
+- Use the layout in spec section 12. Match field names, struct, and derivations exactly
+  (`subjectOf`, `nullifierOf`, the `Attestation` struct, the ledger fields).
+- Network config must be environment-driven (Preview now; Preprod/Mainnet later) — no
+  hard-coded endpoints in code; read from env. Do NOT add Mainnet/Blockfrost config yet.
+- Secrets server-only; oracle signer has no HTTP surface; no PII/content/secrets in logs.
+- Pin exact versions with checksums in CI; no floating `compact update` in release builds.
+- Write `SECURITY.md`, `THREAT-MODEL.md`, `PRIVACY-BOUNDARY.md` from the spec.
+
+## How to communicate
+- Lead with uncertainties, not with what's done.
+- Ask rather than assume when the spec is silent.
+- Keep a "Deviations" list in every response.
+- If asked to confirm something you haven't executed, refuse and say why.
+
+Begin with Phase 0. Confirm you've read the spec and the environment constraints, then
+produce the spike plan.
