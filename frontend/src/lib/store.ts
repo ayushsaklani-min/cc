@@ -46,6 +46,7 @@ export interface VerificationRecord {
   submitDetail?: string;
   /** Set once Midnight.js reports the submitted transaction finalized. */
   txId?: string;
+  txHash?: string;
   blockHeight?: number;
   /** From finalized, indexed chain state only. */
   chainValidUntil?: number;

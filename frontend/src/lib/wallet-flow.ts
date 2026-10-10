@@ -65,7 +65,7 @@ export async function submitOnChain(
       },
     );
     // Finalized according to Midnight.js. The page still waits for the indexed status before saying "Verified".
-    update({ phase: "submitting", txId: result.txId, blockHeight: result.blockHeight });
+    update({ phase: "submitting", txId: result.txId, txHash: result.txHash, blockHeight: result.blockHeight });
   } catch (e) {
     // A wallet failure inside a Midnight.js provider arrives wrapped; recover the original.
     const walletError = e instanceof submit.WalletError ? e : submit.takeLastWalletError();

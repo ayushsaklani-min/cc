@@ -25,6 +25,7 @@ for (const session of Object.values(JSON.parse(local.DEV_SESSION_TOKENS))) {
 const env = {
   NODE_VERSION: "25.2.1",
   CIPHERCOMPLY_DEMO_MODE: "preview-demo",
+  MIDNIGHT_EXPLORER_URL: local.MIDNIGHT_EXPLORER_URL ?? "",
   DATABASE_PATH: "./data/ciphercomply.db",
   REGISTRY_FINGERPRINT_KEY: randomBytes(32).toString("hex"),
   DEV_SESSION_TOKENS: JSON.stringify(sessions),

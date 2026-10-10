@@ -328,6 +328,7 @@ export function ResultPanel({
             The transaction is finalized and the network&apos;s indexed state shows your verification
             {record.chainValidUntil ? `, valid until ${formatDateTime(record.chainValidUntil * 1000)}` : ""}.
           </p>
+          <ExplorerLinks record={record} config={config} />
         </Notice>
       );
     case "error":
@@ -348,6 +349,32 @@ export function ResultPanel({
     default:
       return null;
   }
+}
+
+/**
+ * Links to the configured block explorer: the transaction when its hash is known,
+ * otherwise the block it landed in, and always the contract. Renders nothing
+ * when the deployment has no explorer.
+ */
+export function ExplorerLinks({ record, config }: { record: VerificationRecord; config: PublicConfig | null }) {
+  const base = config?.explorerUrl?.replace(/\/$/, "");
+  if (!base || !config) return null;
+  const links: { href: string; label: string }[] = [];
+  if (record.txHash) {
+    links.push({ href: `${base}/transactions/0x${record.txHash.replace(/^0x/, "")}`, label: "View transaction" });
+  } else if (record.blockHeight !== undefined) {
+    links.push({ href: `${base}/blocks/${record.blockHeight}`, label: `View block ${record.blockHeight}` });
+  }
+  links.push({ href: `${base}/contracts/${config.contractAddress}`, label: "View contract" });
+  return (
+    <p className="mt-3 flex flex-wrap gap-x-6 gap-y-2">
+      {links.map((l) => (
+        <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer" className="link-draw text-[15px] font-medium">
+          {l.label} ↗
+        </a>
+      ))}
+    </p>
+  );
 }
 
 export function OutcomeBadge({ record }: { record: VerificationRecord }) {
@@ -372,6 +399,7 @@ export function TechnicalDetails({ record, config }: { record: VerificationRecor
           : "No transaction has been submitted for this verification from this browser."}
         {config?.explorerUrl ? "" : " No block explorer is configured for this deployment."}
       </p>
+      {record.txId && <ExplorerLinks record={record} config={config} />}
     </Details>
   );
 }

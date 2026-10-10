@@ -179,6 +179,8 @@ export interface SubmitEvents {
 
 export interface SubmitResult {
   txId: string;
+  /** What block explorers index transactions by. */
+  txHash: string;
   blockHeight: number;
 }
 
@@ -264,5 +266,5 @@ export async function submitAttestation(api: ConnectedAPI, options: SubmitOption
     initialPrivateState: privateState,
   });
   const tx = await contract.callTx.verifyAndRegister();
-  return { txId: tx.public.txId, blockHeight: tx.public.blockHeight };
+  return { txId: tx.public.txId, txHash: tx.public.txHash, blockHeight: tx.public.blockHeight };
 }
