@@ -25,7 +25,9 @@ export default function Dashboard() {
     <div className="space-y-10">
       <div className="max-w-2xl">
         <Eyebrow>Your verification workspace</Eyebrow>
-        <h1 className="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">Verify privately.</h1>
+        <h1 className="mt-3 font-display text-5xl font-medium leading-[0.98] tracking-[-0.04em] sm:text-6xl">
+          Verify <em className="font-normal">privately.</em>
+        </h1>
         <p className="mt-3 text-lg text-muted">Prove only what matters.</p>
         <p className="mt-4 text-[15px] text-ink/80">
           {latest === undefined
@@ -40,7 +42,7 @@ export default function Dashboard() {
 
       <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
         <Card aria-labelledby="start-heading">
-          <h2 id="start-heading" className="text-2xl font-semibold tracking-tight">
+          <h2 id="start-heading" className="font-display text-2xl font-medium tracking-[-0.02em]">
             Start a verification
           </h2>
           <p className="mt-2 text-[15px] text-muted">Upload the document required by your selected policy.</p>
@@ -61,7 +63,7 @@ export default function Dashboard() {
 
         <div className="space-y-6">
           <Card aria-labelledby="status-heading">
-            <h2 id="status-heading" className="text-lg font-semibold">
+            <h2 id="status-heading" className="font-display text-lg font-medium tracking-[-0.015em]">
               Verification status
             </h2>
             <div className="mt-4">
@@ -96,7 +98,7 @@ export default function Dashboard() {
           </Card>
 
           <Card aria-labelledby="network-heading">
-            <h2 id="network-heading" className="text-lg font-semibold">
+            <h2 id="network-heading" className="font-display text-lg font-medium tracking-[-0.015em]">
               Network
             </h2>
             <dl className="mt-2 divide-y divide-line">
@@ -117,7 +119,7 @@ export default function Dashboard() {
       </div>
 
       <Card aria-labelledby="activity-heading">
-        <h2 id="activity-heading" className="text-lg font-semibold">
+        <h2 id="activity-heading" className="font-display text-lg font-medium tracking-[-0.015em]">
           Recent activity
         </h2>
         <p className="mt-1 text-[14px] text-muted">Stored in this browser only. No document content is kept here.</p>

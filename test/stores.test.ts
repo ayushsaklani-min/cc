@@ -40,15 +40,44 @@ describe("document registry", () => {
     expect(() => r.markIssued("fp", "alice", record, 2000)).toThrow(RegistryStateError);
   });
 
-  it("an ISSUED row never expires and is never re-earnable", () => {
+  it("an ISSUED row never expires for other subjects, and is never re-earnable through markIssued", () => {
     const r = fresh();
     r.reserve("fp", "alice", 1000);
     r.markIssued("fp", "alice", record, 1001);
     const muchLater = 1000 + 10 * 365 * 86_400;
     expect(() => r.reserve("fp", "bob", muchLater)).toThrow(DocumentConflictError);
-    expect(r.reserve("fp", "alice", muchLater)).toEqual({ kind: "already_issued", record, state: "ISSUED" });
     expect(() => r.markIssued("fp", "alice", { ...record, nonce: "cc" }, muchLater)).toThrow(RegistryStateError);
+    expect(() => r.reissue("fp", "bob", { ...record, nonce: "cc" }, muchLater)).toThrow(RegistryStateError);
     expect(r.get("fp")?.nonce).toBe("aa");
+  });
+
+  it("the same subject gets the original back while it is usable, and a replacement only after expiry plus grace", () => {
+    const r = fresh(); // record expires at 1900; grace is 120 s
+    r.reserve("fp", "alice", 1000);
+    r.markIssued("fp", "alice", record, 1001);
+
+    expect(r.reserve("fp", "alice", 1899)).toEqual({ kind: "already_issued", record, state: "ISSUED" });
+    // Expired but inside the grace period: neither usable nor replaceable yet.
+    expect(r.reserve("fp", "alice", 1900)).toMatchObject({ kind: "already_issued" });
+    expect(r.reserve("fp", "alice", 2019)).toMatchObject({ kind: "already_issued" });
+    expect(() => r.reissue("fp", "alice", { ...record, nonce: "cc", expiresAt: 2919 }, 2019)).toThrow(RegistryStateError);
+
+    expect(r.reserve("fp", "alice", 2020)).toEqual({ kind: "reissuable" });
+    const replacement = { nonce: "cc", digest: "dd", issued: '{"x":2}', expiresAt: 2920 };
+    r.reissue("fp", "alice", replacement, 2020);
+    expect(r.get("fp")).toMatchObject({ state: "ISSUED", subject: "alice", ...replacement });
+    // The replacement is now the one in force; a second replacement must wait for it to expire too.
+    expect(r.reserve("fp", "alice", 2021)).toEqual({ kind: "already_issued", record: replacement, state: "ISSUED" });
+    expect(() => r.reserve("fp", "bob", 5000)).toThrow(DocumentConflictError);
+  });
+
+  it("a confirmed document is not replaceable", () => {
+    const r = fresh();
+    r.reserve("fp", "alice", 1000);
+    r.markIssued("fp", "alice", record, 1001);
+    r.confirm("fp", 1002);
+    expect(r.reserve("fp", "alice", 999_999)).toMatchObject({ kind: "already_issued", state: "CONFIRMED" });
+    expect(() => r.reissue("fp", "alice", { ...record, nonce: "cc" }, 999_999)).toThrow(RegistryStateError);
   });
 
   it("release drops only an unsigned reservation", () => {
@@ -81,11 +110,15 @@ describe("document registry", () => {
       before.close(); // the process dies here, before any response or confirmation
 
       const after = openDatabase(file);
-      const r2 = new DocumentRegistry(after);
-      expect(r2.pendingSettlement()).toEqual([{ fingerprint: "fp", subject: "alice", state: "ISSUED", ...record }]);
-      expect(r2.reserve("fp", "alice", 5000)).toMatchObject({ kind: "already_issued" });
-      expect(() => r2.reserve("fp", "bob", 5000)).toThrow(DocumentConflictError);
-      after.close();
+      try {
+        const r2 = new DocumentRegistry(after);
+        expect(r2.pendingSettlement()).toEqual([{ fingerprint: "fp", subject: "alice", state: "ISSUED", ...record }]);
+        // While the signed attestation is still usable, recovery hands it back instead of re-signing.
+        expect(r2.reserve("fp", "alice", 1500)).toEqual({ kind: "already_issued", record, state: "ISSUED" });
+        expect(() => r2.reserve("fp", "bob", 5000)).toThrow(DocumentConflictError);
+      } finally {
+        after.close(); // or the directory cannot be removed on Windows, hiding the real failure
+      }
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

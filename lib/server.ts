@@ -4,6 +4,8 @@
 // Two pieces here are development-only and refuse to start in production:
 // bearer-token sessions from DEV_SESSION_TOKENS, and an oracle key held in
 // process memory. Real authentication and key custody are separate work.
+// The one exception is an explicitly declared demo on the Preview test
+// network (CIPHERCOMPLY_DEMO_MODE=preview-demo), see devSecretsAllowed().
 import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { encodeContractAddress } from "@midnight-ntwrk/compact-runtime";
@@ -56,8 +58,18 @@ export const INCOME_USD_85K_V1: Policy = {
   crossCheckToleranceBps: 100n,
 };
 
+/**
+ * Whether the development authenticator and in-memory oracle key may be used.
+ * Always outside production. In production only for a hosted demo that says so
+ * explicitly and runs against the Preview test network, never any other one.
+ */
+export function devSecretsAllowed(e: Record<string, string | undefined> = process.env): boolean {
+  if (e.NODE_ENV !== "production") return true;
+  return e.CIPHERCOMPLY_DEMO_MODE === "preview-demo" && e.MIDNIGHT_NETWORK === "preview";
+}
+
 function devSessions(): (authorization: string | undefined) => Promise<Session | undefined> {
-  if (process.env.NODE_ENV === "production") {
+  if (!devSecretsAllowed()) {
     throw new NotConfiguredError("no production authenticator is configured");
   }
   const raw = JSON.parse(env("DEV_SESSION_TOKENS")) as Record<string, { principal: string; method: string; verifiedName?: string }>;
@@ -81,7 +93,7 @@ function devSessions(): (authorization: string | undefined) => Promise<Session |
 }
 
 function devSigner() {
-  if (process.env.NODE_ENV === "production") {
+  if (!devSecretsAllowed()) {
     throw new NotConfiguredError("no production oracle key custody is configured");
   }
   return localSchnorrSigner(BigInt(env("ORACLE_DEV_SECRET_SCALAR")));

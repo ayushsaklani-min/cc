@@ -3,8 +3,14 @@
 //
 // The property this exists for: once an attestation has been signed for a
 // document, that fact is durable. A crash after signing leaves an ISSUED row,
-// and an ISSUED row never expires, so the same document cannot earn a second
-// attestation. Only RESERVED rows (abandoned uploads) time out.
+// and an ISSUED row never expires, so the document stays bound to the subject
+// it was issued to: no other subject can ever use it. Only RESERVED rows
+// (abandoned uploads) time out.
+//
+// [DEVIATION S-3] The same subject may be issued a replacement once its earlier
+// attestation can no longer be submitted (expired, plus a grace period for
+// clock difference with the chain). At most one usable attestation per
+// document exists at any time.
 import { transaction, type Db } from "./db.ts";
 
 export type DocumentState = "RESERVED" | "ISSUED" | "CONFIRMED";
@@ -25,6 +31,8 @@ export interface DocumentRow extends Partial<IssuedRecord> {
 
 export type ReserveResult =
   | { kind: "reserved" }
+  /** This subject's earlier attestation has expired unusably; a replacement may be signed and stored with reissue(). */
+  | { kind: "reissuable" }
   /** This subject already holds an attestation for this document: hand it back, never re-sign. */
   | { kind: "already_issued"; record: IssuedRecord; state: "ISSUED" | "CONFIRMED" };
 
@@ -59,6 +67,8 @@ export class DocumentRegistry {
     private readonly db: Db,
     /** How long an abandoned RESERVED row blocks other subjects, in seconds. */
     private readonly reservationTtl = 900,
+    /** How long after an attestation expires before the same subject may be issued a replacement, in seconds. */
+    private readonly reissueGrace = 120,
   ) {}
 
   private row(fingerprint: string): Row | undefined {
@@ -80,7 +90,9 @@ export class DocumentRegistry {
       }
       if (row.state !== "RESERVED") {
         if (row.subject !== subject) throw new DocumentConflictError();
-        return { kind: "already_issued", record: recordOf(row), state: row.state };
+        const record = recordOf(row);
+        if (row.state === "ISSUED" && now >= record.expiresAt + this.reissueGrace) return { kind: "reissuable" };
+        return { kind: "already_issued", record, state: row.state };
       }
       const abandoned = now - row.reserved_at > this.reservationTtl;
       if (row.subject !== subject && !abandoned) throw new DocumentConflictError();
@@ -104,6 +116,22 @@ export class DocumentRegistry {
         )
         .run(record.nonce, record.digest, record.issued, record.expiresAt, now, fingerprint, subject);
       if (r.changes !== 1) throw new RegistryStateError("no reservation held by this subject");
+    });
+  }
+
+  /**
+   * Replaces this subject's expired, unsubmitted attestation with a new one.
+   * The row stays ISSUED throughout, so the document is never unclaimed.
+   */
+  reissue(fingerprint: string, subject: string, record: IssuedRecord, now: number): void {
+    transaction(this.db, () => {
+      const r = this.db
+        .prepare(
+          `UPDATE documents SET nonce = ?, digest = ?, issued = ?, expires_at = ?, issued_at = ?
+           WHERE fingerprint = ? AND subject = ? AND state = 'ISSUED' AND expires_at + ? <= ?`,
+        )
+        .run(record.nonce, record.digest, record.issued, record.expiresAt, now, fingerprint, subject, this.reissueGrace, now);
+      if (r.changes !== 1) throw new RegistryStateError("no expired attestation held by this subject");
     });
   }
 

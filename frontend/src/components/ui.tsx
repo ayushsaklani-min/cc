@@ -9,10 +9,10 @@ import type { Tone } from "@/lib/copy";
 const cx = (...parts: (string | false | undefined)[]) => parts.filter(Boolean).join(" ");
 
 const BUTTON_BASE =
-  "inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-6 text-[15px] font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex min-h-12 items-center justify-center gap-2.5 rounded-none px-6 text-[15px] font-medium transition-[background-color,box-shadow,transform] duration-300 ease-[var(--ease-out)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100";
 const BUTTON_VARIANT = {
-  primary: "bg-ink text-surface hover:bg-ink/85 active:bg-ink/75",
-  secondary: "border border-line bg-surface text-ink hover:bg-neutral-soft active:bg-line",
+  primary: "bg-ink text-surface shadow-[0_10px_24px_-14px_var(--ink)] hover:bg-ink-soft hover:shadow-[0_16px_32px_-14px_var(--ink)]",
+  secondary: "border border-ink bg-transparent text-ink hover:bg-ink hover:text-surface",
   quiet: "px-3 text-ink underline-offset-4 hover:underline",
 };
 
@@ -44,14 +44,20 @@ export function Card({
   ...props
 }: HTMLAttributes<HTMLElement> & { as?: "section" | "div" | "article" }) {
   return (
-    <Tag {...props} className={cx("rounded-3xl border border-line bg-surface p-6 sm:p-8", className)}>
+    <Tag
+      {...props}
+      className={cx(
+        "border border-line bg-surface p-6 shadow-[var(--shadow-card)] transition-[box-shadow,border-color] duration-500 ease-[var(--ease-out)] hover:border-line-strong hover:shadow-[var(--shadow-lift)] sm:p-8",
+        className,
+      )}
+    >
       {children}
     </Tag>
   );
 }
 
 export function Eyebrow({ children }: { children: ReactNode }) {
-  return <p className="text-[13px] font-medium uppercase tracking-[0.14em] text-muted">{children}</p>;
+  return <p className="annot text-muted">{children}</p>;
 }
 
 const TONE_STYLE: Record<Tone, string> = {
@@ -73,7 +79,7 @@ const TONE_ICON: Record<Tone, typeof Check> = {
 export function StatusBadge({ tone, children }: { tone: Tone; children: ReactNode }) {
   const Icon = TONE_ICON[tone];
   return (
-    <span className={cx("inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] font-medium", TONE_STYLE[tone])}>
+    <span className={cx("inline-flex items-center gap-1.5 px-3 py-1 text-[13px] font-medium", TONE_STYLE[tone])}>
       <Icon className={cx("size-4 shrink-0", tone === "progress" && "animate-spin")} aria-hidden />
       {children}
     </span>
@@ -83,7 +89,7 @@ export function StatusBadge({ tone, children }: { tone: Tone; children: ReactNod
 export function Notice({ tone, title, children }: { tone: Exclude<Tone, "progress">; title: string; children?: ReactNode }) {
   const Icon = TONE_ICON[tone];
   return (
-    <div role={tone === "error" ? "alert" : "status"} className={cx("flex gap-3 rounded-2xl p-4", TONE_STYLE[tone])}>
+    <div role={tone === "error" ? "alert" : "status"} className={cx("flex gap-3 border-l-2 border-current p-4", TONE_STYLE[tone])}>
       <Icon className="mt-0.5 size-5 shrink-0" aria-hidden />
       <div className="min-w-0 text-[15px]">
         <p className="font-semibold">{title}</p>
@@ -107,7 +113,7 @@ export function Identifier({ label, value }: { label: string; value: string }) {
         onClick={() => {
           void navigator.clipboard.writeText(value).then(() => setCopied(true));
         }}
-        className="inline-flex size-9 shrink-0 items-center justify-center rounded-full border border-line hover:bg-neutral-soft"
+        className="inline-flex size-9 shrink-0 items-center justify-center border border-line-strong hover:bg-neutral-soft"
         aria-label={`Copy ${label}`}
       >
         {copied ? <Check className="size-4" aria-hidden /> : <Copy className="size-4" aria-hidden />}
@@ -121,7 +127,7 @@ export function Identifier({ label, value }: { label: string; value: string }) {
 
 export function Details({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <details className="group rounded-2xl border border-line bg-surface">
+    <details className="group border border-line bg-surface">
       <summary className="flex cursor-pointer list-none items-center justify-between gap-4 rounded-2xl px-5 py-4 text-[15px] font-medium [&::-webkit-details-marker]:hidden">
         {title}
         <ChevronDown className="size-4 shrink-0 transition-transform group-open:rotate-180" aria-hidden />
@@ -142,10 +148,10 @@ export function Row({ label, children }: { label: string; children: ReactNode })
 
 export function Logo() {
   return (
-    <span className="inline-flex items-center gap-2 text-[17px] font-semibold tracking-tight text-ink">
+    <span className="inline-flex items-center gap-2.5 font-display text-[21px] font-medium tracking-[-0.02em] text-ink">
       <svg viewBox="0 0 24 24" className="size-6" aria-hidden>
-        <rect x="2.5" y="2.5" width="19" height="19" rx="6" fill="none" stroke="currentColor" strokeWidth="1.8" />
-        <path d="M15.5 9.2a4.4 4.4 0 1 0 0 5.6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+        <rect x="2" y="2" width="20" height="20" fill="currentColor" />
+        <path d="M15.6 9a4.6 4.6 0 1 0 0 6" fill="none" stroke="var(--canvas)" strokeWidth="1.7" strokeLinecap="square" />
       </svg>
       CipherComply
     </span>

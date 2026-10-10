@@ -29,6 +29,16 @@ const nextConfig: NextConfig = {
     "@midnight-ntwrk/midnight-js-indexer-public-data-provider",
     "ws",
   ],
+  // A pages-only deployment sets BACKEND_ORIGIN and forwards every API call to
+  // the deployment that holds the secrets, ahead of its own route files.
+  async rewrites() {
+    const backend = process.env.BACKEND_ORIGIN?.replace(/\/$/, "");
+    return {
+      beforeFiles: backend ? [{ source: "/api/:path*", destination: `${backend}/api/:path*` }] : [],
+      afterFiles: [],
+      fallback: [],
+    };
+  },
   turbopack: {
     // ../lib and ../contracts live outside this package.
     root: repoRoot,

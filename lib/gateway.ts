@@ -270,8 +270,9 @@ export async function handleVerify(deps: GatewayDeps, req: VerifyRequest): Promi
 
     if (reserved.kind === "already_issued") {
       // Signed before (possibly by a request that crashed before answering):
-      // hand the original back while it is still usable, never sign again.
+      // hand the original back while it is still usable, never sign a second usable one.
       if (reserved.record.expiresAt <= now) {
+        // Expired, but still inside the grace period before a replacement is allowed.
         return finalize(422, { status: "ineligible", reason: "attestation_expired", correlationId });
       }
       return finalize(201, {
@@ -280,7 +281,9 @@ export async function handleVerify(deps: GatewayDeps, req: VerifyRequest): Promi
         attestation: JSON.parse(reserved.record.issued) as Record<string, unknown>,
       });
     }
-    reservation = { fingerprint, subject: subjectHex };
+    // A replacement keeps the existing ISSUED row, so there is no reservation to release on failure.
+    const replacing = reserved.kind === "reissuable";
+    if (!replacing) reservation = { fingerprint, subject: subjectHex };
 
     const issued = await issueAttestation(deps.signer, {
       schemaVersion: 1n,
@@ -298,17 +301,14 @@ export async function handleVerify(deps: GatewayDeps, req: VerifyRequest): Promi
       documentHash,
     });
     const attestation = serializeIssued(issued);
-    deps.registry.markIssued(
-      fingerprint,
-      subjectHex,
-      {
-        nonce: toHex(issued.attestation.nonce),
-        digest: toHex(issued.digest),
-        issued: JSON.stringify(attestation),
-        expiresAt: now + config.attestationTtl,
-      },
-      now,
-    );
+    const record = {
+      nonce: toHex(issued.attestation.nonce),
+      digest: toHex(issued.digest),
+      issued: JSON.stringify(attestation),
+      expiresAt: now + config.attestationTtl,
+    };
+    if (replacing) deps.registry.reissue(fingerprint, subjectHex, record, now);
+    else deps.registry.markIssued(fingerprint, subjectHex, record, now);
     reservation = undefined; // spent: must not be released by the failure path
 
     return finalize(201, { status: "eligible", verificationMethod, attestation });

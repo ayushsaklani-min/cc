@@ -195,3 +195,24 @@ describe("HTTP adapter", () => {
     }
   });
 });
+
+describe("development secrets in production", () => {
+  it("are allowed outside production", async () => {
+    const { devSecretsAllowed } = await import("../lib/server.ts");
+    expect(devSecretsAllowed({ NODE_ENV: "development" })).toBe(true);
+    expect(devSecretsAllowed({})).toBe(true);
+  });
+
+  it("are refused in production by default", async () => {
+    const { devSecretsAllowed } = await import("../lib/server.ts");
+    expect(devSecretsAllowed({ NODE_ENV: "production", MIDNIGHT_NETWORK: "preview" })).toBe(false);
+    expect(devSecretsAllowed({ NODE_ENV: "production", CIPHERCOMPLY_DEMO_MODE: "true", MIDNIGHT_NETWORK: "preview" })).toBe(false);
+  });
+
+  it("are allowed in production only for a declared demo on Preview", async () => {
+    const { devSecretsAllowed } = await import("../lib/server.ts");
+    expect(devSecretsAllowed({ NODE_ENV: "production", CIPHERCOMPLY_DEMO_MODE: "preview-demo", MIDNIGHT_NETWORK: "preview" })).toBe(true);
+    expect(devSecretsAllowed({ NODE_ENV: "production", CIPHERCOMPLY_DEMO_MODE: "preview-demo", MIDNIGHT_NETWORK: "mainnet" })).toBe(false);
+    expect(devSecretsAllowed({ NODE_ENV: "production", CIPHERCOMPLY_DEMO_MODE: "preview-demo" })).toBe(false);
+  });
+});

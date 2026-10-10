@@ -41,7 +41,7 @@ export function UploadDropzone({
         }}
         onDragLeave={() => setOver(false)}
         onDrop={drop}
-        className={`rounded-3xl border border-dashed p-8 text-center transition-colors ${
+        className={`border border-dashed p-8 text-center transition-colors ${
           over ? "border-ink bg-neutral-soft" : error ? "border-error bg-surface" : "border-line bg-canvas"
         }`}
       >
@@ -75,7 +75,7 @@ export function UploadDropzone({
                 type="button"
                 disabled={disabled}
                 onClick={() => onSelect(null)}
-                className="inline-flex size-11 items-center justify-center rounded-full border border-line bg-surface hover:bg-neutral-soft disabled:opacity-50"
+                className="inline-flex size-11 items-center justify-center border border-line-strong bg-surface hover:bg-neutral-soft disabled:opacity-50"
                 aria-label="Remove document"
               >
                 <X className="size-4" aria-hidden />

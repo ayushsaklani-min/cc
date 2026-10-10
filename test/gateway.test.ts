@@ -296,7 +296,7 @@ describe("POST /v1/verify", () => {
     expect(rig.signCount).toBe(1);
   });
 
-  it("the same subject re-uploading gets the original attestation back, then 422 once it has expired", async () => {
+  it("the same subject re-uploading gets the original back, 422 while just expired, then a replacement", async () => {
     const rig = new Rig();
     const document = pdf("my payslip");
     const first = await rig.verify(rig.request({ document }));
@@ -309,6 +309,27 @@ describe("POST /v1/verify", () => {
     const late = await rig.verify(rig.request({ document }));
     expect(late).toMatchObject({ status: 422, body: { reason: "attestation_expired" } });
     expect(rig.signCount).toBe(1);
+
+    // After the grace period the same subject is issued a replacement; nobody else is.
+    rig.now += 120;
+    const other = await rig.verify(rig.request({ session: BOB, userSecret: bytes(32, 0x22), document }));
+    expect(other.status).toBe(409);
+    const replacement = await rig.verify(rig.request({ document }));
+    expect(replacement.status).toBe(201);
+    expect(rig.signCount).toBe(2);
+    const first1 = first.body.attestation as { nonce: string; expiresAt: string };
+    const next = replacement.body.attestation as { nonce: string; expiresAt: string };
+    expect(next.nonce).not.toBe(first1.nonce);
+    expect(Number(next.expiresAt)).toBe(rig.now + 900);
+    expect(rig.registry.pendingSettlement()).toHaveLength(1);
+
+    // The replacement redeems; the expired original does not.
+    rig.world.time = rig.now;
+    const original = attestationOf(first);
+    expect(() => rig.world.submit(original.attestation, original.signature)).toThrow("Attestation expired");
+    const fresh = attestationOf(replacement);
+    rig.world.submit(fresh.attestation, fresh.signature);
+    expect(rig.world.ledger.usedNullifiers.size()).toBe(1n);
   });
 
   it("crash after signing, before the response: the document is not re-earnable", async () => {

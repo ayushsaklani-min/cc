@@ -2,11 +2,13 @@
 
 import { LogOut, Menu, X } from "lucide-react";
 import Link from "next/link";
+import { motion, useReducedMotion } from "framer-motion";
 import { usePathname } from "next/navigation";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { setSessionToken } from "@/lib/store";
 import { METHOD_LABEL } from "@/lib/copy";
 import { useService } from "./service";
+import { EASE } from "./motion";
 import { Button, Card, Eyebrow, Logo, Notice, StatusBadge } from "./ui";
 import { WalletButton } from "./wallet";
 
@@ -24,7 +26,7 @@ export function NetworkChip() {
   if (service.kind === "not_configured") return <StatusBadge tone="warning">Not configured</StatusBadge>;
   return (
     <span className="inline-flex items-center gap-2">
-      <span className="inline-flex items-center rounded-full border border-line bg-surface px-3 py-1 text-[13px] font-medium capitalize">
+      <span className="annot inline-flex items-center border border-line-strong px-3 py-1.5">
         Midnight {service.config.network}
       </span>
       <WalletButton compact />
@@ -45,7 +47,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         href={item.href}
         aria-current={active ? "page" : undefined}
         onClick={() => setOpen(false)}
-        className={`rounded-full px-4 py-2 text-[15px] ${active ? "bg-ink text-surface" : "text-ink hover:bg-neutral-soft"}`}
+        className={`annot relative py-2 text-ink after:absolute after:inset-x-0 after:-bottom-px after:h-px after:origin-left after:bg-ink after:transition-transform after:duration-500 after:ease-[var(--ease-out)] ${active ? "after:scale-x-100" : "text-muted after:scale-x-0 hover:text-ink hover:after:scale-x-100"}`}
       >
         {item.label}
       </Link>
@@ -54,12 +56,12 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen">
-      <header className="border-b border-line bg-canvas">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-4 lg:px-12">
+      <header className="sticky top-0 z-30 border-b border-line bg-canvas/85 backdrop-blur-md">
+        <div className="mx-auto flex h-[4.5rem] max-w-6xl items-center justify-between gap-4 px-6 lg:px-12">
           <Link href="/" aria-label="CipherComply home">
             <Logo />
           </Link>
-          <nav aria-label="Workspace" className="hidden items-center gap-1 md:flex">
+          <nav aria-label="Workspace" className="hidden items-center gap-9 md:flex">
             {links}
           </nav>
           <div className="flex items-center gap-2">
@@ -70,7 +72,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <button
                 type="button"
                 onClick={() => setSessionToken(null)}
-                className="inline-flex size-10 items-center justify-center rounded-full border border-line bg-surface hover:bg-neutral-soft"
+                className="inline-flex size-10 items-center justify-center border border-line-strong hover:bg-neutral-soft"
                 aria-label="Sign out"
                 title="Sign out"
               >
@@ -80,7 +82,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <button
               type="button"
               onClick={() => setOpen((o) => !o)}
-              className="inline-flex size-10 items-center justify-center rounded-full border border-line bg-surface lg:hidden"
+              className="inline-flex size-10 items-center justify-center border border-line-strong lg:hidden"
               aria-expanded={open}
               aria-controls="workspace-menu"
               aria-label="Menu"
@@ -98,10 +100,23 @@ export function AppShell({ children }: { children: ReactNode }) {
           </nav>
         )}
       </header>
-      <main className="mx-auto max-w-6xl px-6 py-10 lg:px-12 lg:py-14">
-        <Gate>{children}</Gate>
+      <main className="relative mx-auto max-w-6xl px-6 py-10 lg:px-12 lg:py-14">
+        <PageTransition routeKey={pathname}>
+          <Gate>{children}</Gate>
+        </PageTransition>
       </main>
     </div>
+  );
+}
+
+/** Content settles into place on each navigation. */
+function PageTransition({ routeKey, children }: { routeKey: string; children: ReactNode }) {
+  const reduce = useReducedMotion();
+  if (reduce) return <>{children}</>;
+  return (
+    <motion.div key={routeKey} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, ease: EASE }}>
+      {children}
+    </motion.div>
   );
 }
 
@@ -155,7 +170,7 @@ function SignIn({ state }: { state: "signed_out" | "invalid" | "unavailable" }) 
     <div className="mx-auto max-w-lg">
       <Card>
         <Eyebrow>Development sign-in</Eyebrow>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight">Sign in to continue</h1>
+        <h1 className="mt-3 font-display text-3xl font-medium tracking-[-0.03em]">Sign in to continue</h1>
         <p className="mt-3 text-[15px] text-muted">
           This build has no production sign-in yet. Paste a development access token issued by the operator. It is kept only for
           this browser tab.
@@ -173,7 +188,7 @@ function SignIn({ state }: { state: "signed_out" | "invalid" | "unavailable" }) 
               onChange={(e) => setValue(e.target.value)}
               aria-describedby={state === "signed_out" ? undefined : "token-error"}
               aria-invalid={state === "invalid"}
-              className="mt-1.5 block h-12 w-full rounded-full border border-line bg-surface px-5 font-mono text-[14px]"
+              className="mt-1.5 block h-12 w-full border border-line-strong bg-surface px-4 font-mono text-[14px] focus:border-ink"
             />
             {state === "invalid" && (
               <p id="token-error" className="mt-2 text-[14px] text-error">

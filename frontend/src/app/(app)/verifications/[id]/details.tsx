@@ -60,13 +60,13 @@ export function VerificationDetails({ id }: { id: string }) {
       <div>
         <Eyebrow>Verification details</Eyebrow>
         <div className="mt-3 flex flex-wrap items-center gap-4">
-          <h1 className="text-4xl font-semibold tracking-tight">{formatDateTime(record.createdAt)}</h1>
+          <h1 className="font-display text-4xl font-medium leading-[1] tracking-[-0.035em]">{formatDateTime(record.createdAt)}</h1>
           <OutcomeBadge record={record} />
         </div>
       </div>
 
       <Card aria-labelledby="outcome-heading">
-        <h2 id="outcome-heading" className="text-xl font-semibold">
+        <h2 id="outcome-heading" className="font-display text-xl font-medium tracking-[-0.02em]">
           Outcome
         </h2>
         <div className="mt-5" aria-live="polite">
@@ -96,7 +96,7 @@ export function VerificationDetails({ id }: { id: string }) {
       </Card>
 
       <Card aria-labelledby="timeline-heading">
-        <h2 id="timeline-heading" className="text-xl font-semibold">
+        <h2 id="timeline-heading" className="font-display text-xl font-medium tracking-[-0.02em]">
           Progress
         </h2>
         <div className="mt-6">

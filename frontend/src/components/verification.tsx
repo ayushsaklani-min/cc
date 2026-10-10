@@ -2,6 +2,7 @@
 // promotes a record to "confirmed" — only from finalized, indexed chain state.
 "use client";
 
+import { motion, useReducedMotion } from "framer-motion";
 import { Check, Circle, CircleAlert, CircleX, LoaderCircle } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { fetchChainStatus, type ChainStatus, type PublicConfig } from "@/lib/api";
@@ -60,7 +61,15 @@ export function VerificationStepper({ record, uploadFraction }: { record: Verifi
         const last = i === STEPS.length - 1;
         return (
           <li key={label} className="relative flex gap-4 pb-6 last:pb-0" aria-current={state === "current" ? "step" : undefined}>
-            {!last && <span className="absolute left-[13px] top-7 h-[calc(100%-1.75rem)] w-px bg-line" aria-hidden />}
+            {!last && (
+              <span className="absolute left-[13px] top-7 h-[calc(100%-1.75rem)] w-px bg-line" aria-hidden>
+                <span
+                  className={`block w-px origin-top bg-success transition-transform duration-700 ease-[var(--ease-out)] ${
+                    state === "complete" ? "h-full scale-y-100" : "h-full scale-y-0"
+                  }`}
+                />
+              </span>
+            )}
             <StepIcon state={state} />
             <div className="min-w-0 pt-0.5">
               <p className={`text-[15px] ${state === "upcoming" ? "text-muted" : "font-medium text-ink"}`}>{label}</p>
@@ -89,17 +98,24 @@ export function VerificationStepper({ record, uploadFraction }: { record: Verifi
 }
 
 function StepIcon({ state }: { state: StepState }) {
+  const reduce = useReducedMotion();
   const base = "relative z-10 flex size-7 shrink-0 items-center justify-center rounded-full border bg-surface";
   if (state === "complete") {
     return (
-      <span className={`${base} border-success bg-success-soft text-success`}>
+      <motion.span
+        initial={reduce ? false : { scale: 0.6, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: "spring", stiffness: 420, damping: 22 }}
+        className={`${base} border-success bg-success-soft text-success`}
+      >
         <Check className="size-4" aria-hidden />
-      </span>
+      </motion.span>
     );
   }
   if (state === "current") {
     return (
       <span className={`${base} border-ink text-ink`}>
+        <span className="absolute inset-0 rounded-full border border-ink motion-safe:animate-pulse-ring" aria-hidden />
         <LoaderCircle className="size-4 animate-spin" aria-hidden />
       </span>
     );

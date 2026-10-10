@@ -1,15 +1,27 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Bodoni_Moda, Geist, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
+// Interface and body text.
+const sans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+// Headlines: a high-contrast Didone, the letterform of certificates and banknotes.
+const display = Bodoni_Moda({
+  variable: "--font-display-face",
   subsets: ["latin"],
+  style: ["normal", "italic"],
+  display: "swap",
+});
+
+// Annotations, labels and identifiers.
+const mono = IBM_Plex_Mono({
+  variable: "--font-mono-face",
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -23,10 +35,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-      <body className="min-h-screen bg-canvas font-sans text-ink">
-        {children}
-      </body>
+    <html lang="en" className={`${sans.variable} ${display.variable} ${mono.variable} antialiased`}>
+      <body className="min-h-screen bg-canvas font-sans text-ink">{children}</body>
     </html>
   );
 }

@@ -35,7 +35,7 @@ public network yet.
 | Inconsistent revocation epoch | `revokeSubject` is monotonic and cannot be dated after chain time | `contract.test.ts`: revokeSubject |
 | Backward status overwrite | `verifiedUntil` can only move forward | `contract.test.ts`: status monotonicity |
 | Forged assurance tier | `assuranceLevel` is inside the signed attestation and checked against `minAssurance` | `contract.test.ts` |
-| Document re-earned after a crash | ISSUED registry rows are durable and never expire | `stores.test.ts`, `gateway.test.ts`: crash after signing |
+| Document re-earned after a crash, or by another subject | ISSUED registry rows are durable and stay bound to their subject for good; the same subject gets a replacement only once the earlier attestation has expired plus a grace period | `stores.test.ts`, `gateway.test.ts`: crash after signing, replacement after expiry |
 | Idempotency confusion | Key bound to principal + endpoint + request hash | `stores.test.ts`, `gateway.test.ts` |
 | Float threshold or rounding error | Integer minor units end to end | `money.test.ts`, `policy.test.ts` |
 | Wrong policy | `policyId` signed and asserted | `contract.test.ts` |
@@ -53,4 +53,7 @@ public network yet.
   acceptance on a live network are unverified.
 - The admin is a single secret (prototype-grade, as the spec notes).
 - No KMS or HSM signs Jubjub Schnorr natively; production custody design is open.
+- A hosted demo (`CIPHERCOMPLY_DEMO_MODE=preview-demo`, Preview network only) keeps the oracle key in the
+  host's environment variables and authenticates with a shared bearer token. Anyone holding that token can
+  submit documents and consume the extraction quota; anyone with access to the host can sign attestations.
 - The chain reader, the model client, the web routes and the frontend are not built.

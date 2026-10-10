@@ -41,7 +41,7 @@ const REASONS: Record<string, string> = {
   currency_not_supported: "The document's currency is not supported by this policy.",
   subject_revoked: "Verification has been revoked for this identity, so a new attestation cannot be issued.",
   attestation_expired:
-    "An attestation was already issued for this document and has expired. The same document cannot be used again.",
+    "An attestation was already issued for this document and has just expired. Wait two minutes, then upload the document again to get a new one.",
   document_already_claimed: "This document has already been used by a different identity.",
   ambiguous_extraction: "The document could not be read unambiguously, so it needs a manual review.",
   no_evidence: "The figures could not be tied to specific text in the document, so it needs a manual review.",

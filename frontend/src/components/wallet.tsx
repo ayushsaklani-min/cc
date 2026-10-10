@@ -107,7 +107,7 @@ export function WalletButton({ compact = false }: { compact?: boolean }) {
   if (state.kind === "connected") {
     return (
       <span
-        className={`inline-flex items-center gap-2 rounded-full border border-line bg-surface text-[13px] ${compact ? "px-3 py-1" : "px-4 py-2"}`}
+        className={`inline-flex items-center gap-2 border border-line-strong bg-surface text-[13px] ${compact ? "px-3 py-1.5" : "px-4 py-2.5"}`}
         title={state.address}
       >
         <Wallet className="size-4 text-success" aria-hidden />

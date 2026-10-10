@@ -21,11 +21,11 @@ export default function PrivacySettings() {
     <div className="mx-auto max-w-3xl space-y-8">
       <div>
         <Eyebrow>Privacy &amp; settings</Eyebrow>
-        <h1 className="mt-3 text-4xl font-semibold tracking-tight">What happens to your data</h1>
+        <h1 className="mt-3 font-display text-4xl font-medium leading-[1] tracking-[-0.035em] sm:text-5xl">What happens to your data</h1>
       </div>
 
       <Card aria-labelledby="mode-heading">
-        <h2 id="mode-heading" className="text-xl font-semibold">
+        <h2 id="mode-heading" className="font-display text-xl font-medium tracking-[-0.02em]">
           Processing
         </h2>
         <dl className="mt-4 divide-y divide-line border-y border-line">
@@ -48,7 +48,7 @@ export default function PrivacySettings() {
       </Card>
 
       <Card aria-labelledby="disclosure-heading">
-        <h2 id="disclosure-heading" className="text-xl font-semibold">
+        <h2 id="disclosure-heading" className="font-display text-xl font-medium tracking-[-0.02em]">
           Full disclosure
         </h2>
         <div className="mt-5">
@@ -57,7 +57,7 @@ export default function PrivacySettings() {
       </Card>
 
       <Card aria-labelledby="controls-heading">
-        <h2 id="controls-heading" className="text-xl font-semibold">
+        <h2 id="controls-heading" className="font-display text-xl font-medium tracking-[-0.02em]">
           This browser
         </h2>
         <dl className="mt-4 divide-y divide-line border-y border-line">

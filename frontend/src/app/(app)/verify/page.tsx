@@ -75,11 +75,11 @@ export default function VerifyPage() {
     <div className="mx-auto max-w-3xl space-y-8">
       <div>
         <Eyebrow>Verification</Eyebrow>
-        <h1 className="mt-3 text-4xl font-semibold tracking-tight">Verify your eligibility</h1>
+        <h1 className="mt-3 font-display text-4xl font-medium leading-[1] tracking-[-0.035em] sm:text-5xl">Verify your eligibility</h1>
       </div>
 
       <Card aria-labelledby="policy-heading">
-        <h2 id="policy-heading" className="text-xl font-semibold">
+        <h2 id="policy-heading" className="font-display text-xl font-medium tracking-[-0.02em]">
           1. Policy
         </h2>
         <p className="mt-2 text-[15px] text-muted">This deployment enforces one policy.</p>
@@ -94,13 +94,13 @@ export default function VerifyPage() {
       </Card>
 
       <Card aria-labelledby="disclosure-heading">
-        <h2 id="disclosure-heading" className="text-xl font-semibold">
+        <h2 id="disclosure-heading" className="font-display text-xl font-medium tracking-[-0.02em]">
           2. How your document is processed
         </h2>
         <div className="mt-5">
           <PrivacyDisclosure config={config} />
         </div>
-        <label className="mt-6 flex cursor-pointer items-start gap-3 rounded-2xl border border-line p-4">
+        <label className="mt-6 flex cursor-pointer items-start gap-3 border border-line p-4">
           <input
             type="checkbox"
             className="mt-1 size-5 shrink-0 accent-[var(--ink)]"
@@ -116,7 +116,7 @@ export default function VerifyPage() {
       </Card>
 
       <Card aria-labelledby="upload-heading">
-        <h2 id="upload-heading" className="text-xl font-semibold">
+        <h2 id="upload-heading" className="font-display text-xl font-medium tracking-[-0.02em]">
           3. Document
         </h2>
         {!acknowledged && <p className="mt-2 text-[15px] text-muted">Acknowledge the disclosure above to choose a document.</p>}
@@ -138,7 +138,7 @@ export default function VerifyPage() {
 
       {record && (
         <Card aria-labelledby="progress-heading">
-          <h2 id="progress-heading" className="text-xl font-semibold">
+          <h2 id="progress-heading" className="font-display text-xl font-medium tracking-[-0.02em]">
             4. Progress
           </h2>
           <div className="mt-6 grid gap-8 md:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)]">
