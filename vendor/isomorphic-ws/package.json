@@ -1,0 +1,17 @@
+{
+  "name": "isomorphic-ws",
+  "version": "5.0.0-ciphercomply.1",
+  "description": "Local replacement for isomorphic-ws 5.0.0 whose browser entry exports WebSocket by name. See README.md.",
+  "license": "MIT",
+  "main": "node.js",
+  "browser": "browser.mjs",
+  "exports": {
+    ".": {
+      "browser": "./browser.mjs",
+      "default": "./node.js"
+    }
+  },
+  "peerDependencies": {
+    "ws": "*"
+  }
+}

@@ -8,3 +8,11 @@ venv/
 dist/
 build/
 *.pyc
+contracts/managed/
+data/
+*.db
+*.db-wal
+*.db-shm
+midnight-level-db/
+.wallet-state/
+samples/

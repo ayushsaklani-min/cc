@@ -1,0 +1,48 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 25.2.1
+          cache: npm
+
+      # Exact compiler artifact, checksum-verified. No floating `compact update`.
+      - name: Install Compact compiler (pinned, checksum-verified)
+        run: |
+          set -euo pipefail
+          version=$(jq -r .compiler.version toolchain.json)
+          artifact=$(jq -r .compiler.artifact toolchain.json)
+          sha256=$(jq -r .compiler.sha256 toolchain.json)
+          curl --proto '=https' --tlsv1.2 -fsSL -o "$artifact" \
+            "https://github.com/midnightntwrk/compact/releases/download/compactc-v${version}/${artifact}"
+          echo "${sha256}  ${artifact}" | sha256sum --check --strict
+          mkdir -p "$HOME/compactc" "$HOME/.local/bin"
+          unzip -q "$artifact" -d "$HOME/compactc"
+          chmod +x "$HOME/compactc/compactc" "$HOME/compactc/compactc.bin" "$HOME/compactc/zkir" "$HOME/compactc/zkir-v3"
+          # scripts/compile.mjs calls `compact compile ...`
+          printf '#!/usr/bin/env bash\n[ "$1" = compile ] && shift\nexec "$HOME/compactc/compactc" "$@"\n' > "$HOME/.local/bin/compact"
+          chmod +x "$HOME/.local/bin/compact"
+
+      - run: npm ci
+
+      # Dependency and secret scans.
+      - run: npm audit --audit-level=high
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Expiry-assertion gate, compiler-version gate + compile, typecheck, unit and
+      # simulator tests, golden vectors, subject-ownership tests.
+      - run: npm run ci

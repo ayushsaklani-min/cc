@@ -1,0 +1,22 @@
+{
+  "wslDistro": "Ubuntu-24.04",
+  "compiler": {
+    "version": "0.31.1",
+    "rejected": ["0.31.0"],
+    "artifact": "compactc_v0.31.1_x86_64-unknown-linux-musl.zip",
+    "sha256": "e291b4bab4d4e857707008f8b1c25c2b8e0c843f6c737d0ee6c0d9ac69a6bbfb"
+  },
+  "devtools": "0.5.1",
+  "languageVersion": "0.23",
+  "compactRuntime": "0.16.0",
+  "onchainRuntime": "3.0.0",
+  "midnightJs": "4.1.1",
+  "proofServer": "8.1.0",
+  "contracts": [
+    {
+      "source": "contracts/ciphercomply.schnorr.compact",
+      "out": "contracts/managed/ciphercomply",
+      "compiler": "0.31.1"
+    }
+  ]
+}

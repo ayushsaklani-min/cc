@@ -1,0 +1,230 @@
+// CipherComply -- Profile A (public network, ledger 8, compiler 0.31.1).
+//
+// Deviations from the frozen v5 spec are marked [DEVIATION D-n] and are listed
+// with their evidence in SPIKE-REPORT.md. Do not remove a marker without
+// updating that list.
+
+pragma language_version 0.23;
+import CompactStandardLibrary;
+
+export struct Attestation {
+   schemaVersion: Uint<8>;
+   domain: Bytes<32>;
+   policyId: Bytes<32>;
+   subject: Bytes<32>;           // bound into signature
+   eligible: Boolean;
+   assuranceLevel: Uint<8>;      // 1=low 2=medium 3=high -- SIGNED
+   amountMinorUnits: Uint<64>;   // scaled integer, not float
+   currency: Bytes<3>;           // ISO 4217
+   issuedAt: Uint<64>;
+   expiresAt: Uint<64>;
+   statusValidUntil: Uint<64>;
+   nonce: Bytes<32>;
+   documentHash: Bytes<32>;      // never on-chain
+}
+
+// [DEVIATION D-3] The spec's Bytes<64> signature does not exist as a verifier
+// input on ledger 8. This mirrors the shape of the ledger-9 standard-library
+// JubjubSchnorrSignature so Profile B / a later migration is a rename.
+export struct OracleSignature {
+   announcement: JubjubPoint;
+   response: Field;
+}
+
+struct SchnorrTranscript {
+   tag: Bytes<32>;
+   announcement: JubjubPoint;
+   publicKey: JubjubPoint;
+   digest: Bytes<32>;
+}
+
+export sealed ledger domainTag: Bytes<32>;
+export sealed ledger policyId: Bytes<32>;
+export sealed ledger minAssurance: Uint<8>;
+// [DEVIATION D-2] JubjubPoint, not Bytes<32>: the curve operations available
+// on ledger 8 take a point, and there is no in-circuit point decompression.
+export ledger oraclePublicKey: JubjubPoint;
+export ledger oracleKeyId: Uint<32>;
+export ledger adminHash: Bytes<32>;
+export ledger verifiedUntil: Map<Bytes<32>, Uint<64>>;
+export ledger revokedAt: Map<Bytes<32>, Uint<64>>;
+export ledger usedNullifiers: Map<Bytes<32>, Boolean>;
+
+witness userSecretKey(): Bytes<32>;
+witness adminSecretKey(): Bytes<32>;
+witness attestation(): Attestation;
+witness oracleSignature(): OracleSignature;
+
+struct SubjectPreimage {
+   tag: Bytes<32>;
+   contractAddress: Bytes<32>;
+   ownerKey: JubjubPoint;
+}
+
+// The derivations are exported as pure circuits taking the contract address
+// explicitly, so the gateway, the signer and the tests run the same code the
+// circuit does. In-circuit callers always pass kernel.self().
+
+// [DEVIATION D-10] The spec hashed the user secret directly into the subject,
+// which leaves the gateway no way to check ownership before the oracle signs
+// (spec 5.6). The subject is instead the hash of the public key of the user
+// secret: the circuit still demands the secret, and the gateway can verify a
+// signature under ownerKey over its challenge and recompute the subject.
+//
+// ecMulGenerator needs a scalar below the subgroup order, so the scalar is the
+// 31 low-order bytes of the 32-byte secret.
+export pure circuit ownerScalarOf(secretKey: Bytes<32>): Field {
+   return slice<31>(secretKey, 0) as Field;
+}
+
+export pure circuit ownerKeyOf(secretKey: Bytes<32>): JubjubPoint {
+   return ecMulGenerator(ownerScalarOf(secretKey));
+}
+
+export pure circuit subjectFor(contractAddress: Bytes<32>, ownerKey: JubjubPoint): Bytes<32> {
+   return persistentHash<SubjectPreimage>(SubjectPreimage {
+       tag: pad(32, "cc:subject:v2"),
+       contractAddress: contractAddress,
+       ownerKey: ownerKey
+   });
+}
+
+// The message a client signs with its owner key to prove it controls a
+// subject, before the oracle will sign anything for that subject.
+export pure circuit ownershipChallenge(domain: Bytes<32>, policy: Bytes<32>,
+                                       serverNonce: Bytes<32>, subject: Bytes<32>): Bytes<32> {
+   return persistentHash<Vector<5, Bytes<32>>>(
+       [pad(32, "cc:ownership:v1"), domain, policy, serverNonce, subject]);
+}
+
+export pure circuit nullifierFor(contractAddress: Bytes<32>, nonce: Bytes<32>): Bytes<32> {
+   return persistentHash<Vector<3, Bytes<32>>>(
+       [pad(32, "cc:nullifier:v1"), contractAddress, nonce]);
+}
+
+export pure circuit adminHashOf(sk: Bytes<32>): Bytes<32> {
+   return persistentHash<Vector<2, Bytes<32>>>([pad(32, "cc:admin:v1"), sk]);
+}
+
+circuit subjectOf(secretKey: Bytes<32>): Bytes<32> {
+   return subjectFor(kernel.self().bytes, ownerKeyOf(secretKey));
+}
+
+circuit nullifierOf(nonce: Bytes<32>): Bytes<32> {
+   return nullifierFor(kernel.self().bytes, nonce);
+}
+
+circuit adminCheck(sk: Bytes<32>): Boolean {
+   return adminHash == adminHashOf(sk);
+}
+
+export pure circuit attestationDigest(a: Attestation): Bytes<32> {
+   return persistentHash<Attestation>(a);
+}
+
+// [DEVIATION D-1] jubjubSchnorrVerify is an unbound identifier on compiler
+// 0.31.1 (it arrives with ledger 9). Verification is therefore composed from
+// the ledger-8 curve builtins, following the construction of the ledger-9
+// standard-library verifier: accept iff  s*G == R + c*PK  with the
+// key-prefixed challenge c = H(R, PK, message). This is security-critical code
+// that the spec said not to hand-roll; it needs independent review.
+//
+// ecMul only accepts scalars below the Jubjub subgroup order (~2^251.8) and
+// ledger 8 has no reducing cast, so the challenge is the hash truncated to its
+// 31 low-order bytes (248 bits) rather than reduced mod the order.
+export pure circuit schnorrChallenge(announcement: JubjubPoint, publicKey: JubjubPoint,
+                                     digest: Bytes<32>): Field {
+   const h = transientHash<SchnorrTranscript>(SchnorrTranscript {
+       tag: pad(32, "cc:schnorr:v1"),
+       announcement: announcement,
+       publicKey: publicKey,
+       digest: digest
+   });
+   return slice<31>(h as Bytes<32>, 0) as Field;
+}
+
+export pure circuit schnorrPublicKey(secretScalar: Field): JubjubPoint {
+   return ecMulGenerator(secretScalar);
+}
+
+export pure circuit schnorrVerify(publicKey: JubjubPoint, digest: Bytes<32>,
+                                  sig: OracleSignature): Boolean {
+   const c = schnorrChallenge(sig.announcement, publicKey, digest);
+   return ecMulGenerator(sig.response) == ecAdd(sig.announcement, ecMul(publicKey, c));
+}
+
+// Rejects the identity and every other point of order dividing the cofactor.
+// The ledger-8 builtins do not do this for us (identity rejection in the
+// standard-library verifier only lands in 0.35).
+export pure circuit isUsableOracleKey(publicKey: JubjubPoint): Boolean {
+   return jubjubPointX(ecMul(publicKey, 8)) != 0;
+}
+
+constructor(domain_: Bytes<32>, policy_: Bytes<32>, minAssurance_: Uint<8>,
+            oracleKey_: JubjubPoint, adminHash_: Bytes<32>) {
+   assert(isUsableOracleKey(oracleKey_), "Unusable oracle key");
+   domainTag = disclose(domain_);
+   policyId = disclose(policy_);
+   minAssurance = disclose(minAssurance_);
+   oraclePublicKey = disclose(oracleKey_);
+   oracleKeyId = 1;
+   adminHash = disclose(adminHash_);
+}
+
+export circuit verifyAndRegister(): [] {
+   const a = attestation();
+   const digest = attestationDigest(a);
+   const subject = disclose(a.subject);
+
+   assert(a.schemaVersion == 1, "Unsupported schema");
+   assert(a.domain == domainTag, "Wrong domain");
+   assert(a.policyId == policyId, "Wrong policy");
+   assert(subject == subjectOf(userSecretKey()), "Subject mismatch");
+   assert(a.assuranceLevel >= minAssurance, "Assurance below policy minimum");
+   assert(a.issuedAt < a.expiresAt, "Invalid window");
+   assert(a.expiresAt <= a.statusValidUntil, "Invalid status window");
+
+   // Freshness vs chain time. CI fails the build if this assertion is absent.
+   // [DEVIATION D-5] blockTimeLt forces its bound to be disclosed, so
+   // expiresAt is public in the transaction transcript.
+   assert(blockTimeLt(disclose(a.expiresAt)), "Attestation expired");
+
+   assert(schnorrVerify(oraclePublicKey, digest, oracleSignature()),
+          "Invalid oracle signature");
+
+   if (revokedAt.member(subject)) {
+       assert(a.issuedAt >= revokedAt.lookup(subject), "Issued before revocation");
+   }
+
+   const nf = disclose(nullifierOf(a.nonce));
+   assert(!usedNullifiers.member(nf), "Attestation already used");
+   assert(a.eligible, "Not eligible");
+
+   const statusValidUntil = disclose(a.statusValidUntil);
+   if (verifiedUntil.member(subject)) {
+       assert(statusValidUntil >= verifiedUntil.lookup(subject),
+              "Status would move backward");
+   }
+
+   usedNullifiers.insert(nf, true);
+   verifiedUntil.insert(subject, statusValidUntil);
+}
+
+export circuit rotateOracleKey(newKey: JubjubPoint): [] {
+   assert(adminCheck(adminSecretKey()), "Not admin");
+   assert(isUsableOracleKey(newKey), "Unusable oracle key");
+   oraclePublicKey = disclose(newKey);
+   oracleKeyId = (oracleKeyId + 1) as Uint<32>; // explicit cast, see spec 5.5
+}
+
+// Monotonic + chain-time-bound revocation (H1).
+export circuit revokeSubject(subject: Bytes<32>, atTime: Uint<64>): [] {
+   assert(adminCheck(adminSecretKey()), "Not admin");
+   assert(blockTimeGte(disclose(atTime)), "Revocation in the future");
+   if (revokedAt.member(disclose(subject))) {
+       assert(disclose(atTime) >= revokedAt.lookup(disclose(subject)),
+              "Revocation epoch moved backward");
+   }
+   revokedAt.insert(disclose(subject), disclose(atTime));
+   verifiedUntil.remove(disclose(subject));
+}

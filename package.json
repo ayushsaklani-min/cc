@@ -1,0 +1,59 @@
+{
+  "name": "ciphercomply",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "compile": "node scripts/compile.mjs",
+    "compile:fast": "node scripts/compile.mjs --skip-zk",
+    "gate:expiry": "node scripts/check-expiry-assertion.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "ci": "npm run gate:expiry && npm run compile && npm run typecheck && npm test",
+    "golden:update": "node scripts/update-golden.mjs",
+    "wallet": "tsx scripts/preview-wallet.ts",
+    "deploy": "tsx scripts/preview-deploy.ts",
+    "e2e": "tsx scripts/preview-e2e.ts",
+    "dev:setup": "tsx scripts/dev-setup.ts",
+    "api:smoke": "tsx scripts/api-smoke.ts",
+    "e2e:full": "tsx scripts/preview-full-e2e.ts",
+    "samples": "tsx scripts/make-samples.ts",
+    "send": "tsx scripts/preview-send.ts"
+  },
+  "dependencies": {
+    "@midnight-ntwrk/compact-js": "2.5.1",
+    "@midnight-ntwrk/compact-runtime": "0.16.0",
+    "@midnight-ntwrk/dapp-connector-api": "4.0.1",
+    "@midnight-ntwrk/midnight-js": "4.1.1",
+    "@midnight-ntwrk/midnight-js-fetch-zk-config-provider": "4.1.1",
+    "@midnight-ntwrk/midnight-js-http-client-proof-provider": "4.1.1",
+    "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "4.1.1",
+    "@midnight-ntwrk/midnight-js-level-private-state-provider": "4.1.1",
+    "@midnight-ntwrk/midnight-js-node-zk-config-provider": "4.1.1",
+    "@midnight-ntwrk/onchain-runtime-v3": "3.0.0",
+    "@midnight-ntwrk/wallet-sdk-abstractions": "2.1.0",
+    "@midnight-ntwrk/wallet-sdk-address-format": "3.1.2",
+    "@midnight-ntwrk/wallet-sdk-dust-wallet": "4.1.0",
+    "@midnight-ntwrk/wallet-sdk-facade": "4.0.1",
+    "@midnight-ntwrk/wallet-sdk-hd": "3.0.2",
+    "@midnight-ntwrk/wallet-sdk-shielded": "3.0.1",
+    "@midnight-ntwrk/wallet-sdk-unshielded-wallet": "3.1.0",
+    "rxjs": "7.8.2",
+    "ws": "8.22.0"
+  },
+  "devDependencies": {
+    "@midnight-ntwrk/ledger-v8": "8.1.0",
+    "@types/node": "22.20.5",
+    "@types/ws": "8.18.2",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2",
+    "vitest": "4.1.11"
+  },
+  "overrides": {
+    "@midnight-ntwrk/onchain-runtime-v3": "3.0.0",
+    "isomorphic-ws": "file:./vendor/isomorphic-ws"
+  }
+}

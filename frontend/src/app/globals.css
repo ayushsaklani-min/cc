@@ -1,0 +1,93 @@
+@import "tailwindcss";
+
+@plugin "tailwindcss-animate";
+
+/* Design tokens (UI brief, section 2). One light theme; every colour used in
+   the app comes from here. */
+:root {
+  --canvas: #f7f5f1;
+  --surface: #ffffff;
+  --ink: #171916;
+  --muted-text: #6d6b65;
+  --line: #e6e1da;
+  --success: #237a52;
+  --success-soft: #e9f3ee;
+  --warning: #b7791f;
+  --warning-soft: #f8f0e1;
+  --error: #b83a3a;
+  --error-soft: #f8e9e9;
+  --neutral-soft: #efece6;
+  --radius: 1rem;
+}
+
+@theme {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted-text);
+  --color-line: var(--line);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-error: var(--error);
+  --color-error-soft: var(--error-soft);
+  --color-neutral-soft: var(--neutral-soft);
+
+  /* Names the scaffold's component tooling expects, mapped onto the same tokens. */
+  --color-background: var(--canvas);
+  --color-foreground: var(--ink);
+  --color-card: var(--surface);
+  --color-card-foreground: var(--ink);
+  --color-primary: var(--ink);
+  --color-primary-foreground: var(--surface);
+  --color-muted-foreground: var(--muted-text);
+  --color-border: var(--line);
+  --color-input: var(--line);
+  --color-ring: var(--ink);
+  --color-destructive: var(--error);
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 4px);
+  --radius-sm: calc(var(--radius) - 8px);
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  --animate-drift: drift 14s ease-in-out infinite;
+  @keyframes drift {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+}
+
+@layer base {
+  * {
+    @apply border-line;
+  }
+  html {
+    @apply bg-canvas;
+  }
+  body {
+    @apply bg-canvas text-ink;
+  }
+  :focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+  }
+}
+
+/* Motion is decoration only: with it disabled, nothing about state is lost. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
