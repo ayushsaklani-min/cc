@@ -1,0 +1,19 @@
+# The Vercel CLI uses this file INSTEAD of .gitignore, so secrets must be listed here too.
+.env
+.env.*
+!.env.example
+.wallet-state
+midnight-level-db
+data
+*.db
+*.db-wal
+*.db-shm
+samples
+node_modules
+
+# Not needed by the pages-only build
+video
+test
+contracts/managed/ciphercomply/keys
+*.pdf
+*.txt
