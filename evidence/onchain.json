@@ -1,0 +1,72 @@
+{
+  "network": "preview",
+  "indexerUrl": "https://indexer.preview.midnight.network/api/v4/graphql",
+  "indexerWsUrl": "wss://indexer.preview.midnight.network/api/v4/graphql/ws",
+  "contractAddress": "f414a418e7f7878e1ac7103954084cd1454fdc201bc6c799e17e0dbb39b322df",
+  "domain": "ciphercomply:preview:v1",
+  "policyId": "income-usd-85k:v1",
+  "minAssurance": 2,
+  "transactions": [
+    {
+      "label": "Contract deployment",
+      "identifier": "0081aa756cd754b5cb9681e2d9f282971df43fdc118e76a99b5ffdf31abff635ea",
+      "hash": "8b137e6f082ca9c617d442d67cffa99007b49c8b850f05ad6ab387b933bd199f",
+      "block": 1221482,
+      "action": "ContractDeploy"
+    },
+    {
+      "label": "Attestation settled (CLI wallet, end-to-end run)",
+      "identifier": "007900e4a15efa5b7f4476d6c767b7e495708e33eb1f9085a46a2775fb9113c22d",
+      "hash": "bd1f405da46f3f3dc68264bd670afd8d19e7bcda6be1e2ea95229ee4b8500cd8",
+      "block": 1225891,
+      "action": "ContractCall"
+    },
+    {
+      "label": "Admin revocation (end-to-end run)",
+      "identifier": "007ffae0bacfde5f94eba565de966a431dc32ec3ecbde64ad6440dbbef18172634",
+      "hash": "fe6e95599174284095ef8a4397501ffe65ac0be2cbb52560f6e7808c255a0fc5",
+      "block": 1225895,
+      "action": "ContractCall"
+    },
+    {
+      "label": "Attestation settled (Lace browser wallet, recorded demo)",
+      "hash": "4b5672b553fcb4e83b5e20f1af95f448f4553e977dda29f304c4adc2fa4339be",
+      "block": 1247229,
+      "action": "ContractCall"
+    }
+  ],
+  "ledger": {
+    "recordedAt": "2026-10-11T09:33:06.834Z",
+    "oracleKeyId": "1",
+    "oraclePublicKey": {
+      "x": "26e5c7c75ef82a1a8c94c69d3a487d0c538b6eb08918e27524fcce4c5496c5a2",
+      "y": "34684ca74345cb6b22e10aeb5b6a41f55fbbfc2c2a804751c593687eb97b0fac"
+    },
+    "adminHash": "922bf148d66c762048948b8ae54b8aaade7a61ad6d801dc8367a62a37b3bf25d",
+    "verified": [
+      {
+        "subject": "9d53972b1ea3792083685a2c50d571b808424e3d8e7bcc5669fb1add27e2e217",
+        "validUntil": "1794294798"
+      },
+      {
+        "subject": "c5cdc35bad36ac3a8242cbcb329aed7e2de56c10c7e2182feaa528175337ce86",
+        "validUntil": "1791635670"
+      },
+      {
+        "subject": "77d579c02136e20a63db444995b08cfdeef66b2f344646b006984332e711b0eb",
+        "validUntil": "1794256415"
+      },
+      {
+        "subject": "537d23b67d04b24fda52eca2328f31bc51030803cc485e71406b6a551e520db1",
+        "validUntil": "1794170226"
+      }
+    ],
+    "revoked": [
+      {
+        "subject": "14851f9c8a28e6e2e49d9fb0e07913241c1a29087cd7023be807f3988df2a95a",
+        "epoch": "1791574709"
+      }
+    ],
+    "usedNullifiers": 5
+  }
+}

@@ -8,7 +8,7 @@ const env = readFileSync(new URL("../../.env", import.meta.url), "utf8");
 const key = /^GEMINI_API_KEY=(.+)$/m.exec(env)?.[1]?.trim().replace(/^["']|["']$/g, "");
 if (!key) throw new Error("GEMINI_API_KEY is not set in .env");
 
-const dir = new URL("../public/voiceover/", import.meta.url);
+const dir = new URL(process.env.VO_SET === "demo" ? "../public/voiceover-demo/" : "../public/voiceover/", import.meta.url);
 const ids = process.argv.length > 2 ? process.argv.slice(2) : readdirSync(dir).map((f) => f.replace(/\.wav$/, ""));
 
 for (const id of ids) {

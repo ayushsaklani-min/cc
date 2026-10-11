@@ -15,7 +15,7 @@ import { WalletButton } from "./wallet";
 const NAV = [
   { href: "/dashboard", label: "Overview" },
   { href: "/verify", label: "Verify" },
-  { href: "/privacy", label: "Privacy & settings" },
+  { href: "/privacy", label: "Privacy" },
   { href: "/example", label: "Example app" },
 ];
 
@@ -48,7 +48,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         href={item.href}
         aria-current={active ? "page" : undefined}
         onClick={() => setOpen(false)}
-        className={`annot relative py-2 text-ink after:absolute after:inset-x-0 after:-bottom-px after:h-px after:origin-left after:bg-ink after:transition-transform after:duration-500 after:ease-[var(--ease-out)] ${active ? "after:scale-x-100" : "text-muted after:scale-x-0 hover:text-ink hover:after:scale-x-100"}`}
+        className={`annot relative whitespace-nowrap py-2 text-ink after:absolute after:inset-x-0 after:-bottom-px after:h-px after:origin-left after:bg-ink after:transition-transform after:duration-500 after:ease-[var(--ease-out)] ${active ? "after:scale-x-100" : "text-muted after:scale-x-0 hover:text-ink hover:after:scale-x-100"}`}
       >
         {item.label}
       </Link>
@@ -62,7 +62,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Link href="/" aria-label="CipherComply home">
             <Logo />
           </Link>
-          <nav aria-label="Workspace" className="hidden items-center gap-9 md:flex">
+          <nav aria-label="Workspace" className="hidden items-center gap-7 md:flex">
             {links}
           </nav>
           <div className="flex items-center gap-2">

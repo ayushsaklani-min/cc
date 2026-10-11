@@ -21,7 +21,8 @@
     "api:smoke": "tsx scripts/api-smoke.ts",
     "e2e:full": "tsx scripts/preview-full-e2e.ts",
     "samples": "tsx scripts/make-samples.ts",
-    "send": "tsx scripts/preview-send.ts"
+    "send": "tsx scripts/preview-send.ts",
+    "verify:onchain": "tsx scripts/verify-onchain.ts"
   },
   "dependencies": {
     "@midnight-ntwrk/compact-js": "2.5.1",

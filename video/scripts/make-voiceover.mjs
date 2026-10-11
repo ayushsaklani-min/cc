@@ -10,7 +10,7 @@ const VOICE = process.env.TTS_VOICE ?? "Charon";
 // Newer speech models read a style prefix aloud; set TTS_STYLE=0 for those.
 const STYLE = process.env.TTS_STYLE === "0" ? "" : "Read this as the calm, confident narrator of a premium product film. Measured pace, warm and clear: ";
 
-export const LINES = [
+const FILM_LINES = [
   { id: "intro", text: "CipherComply. Private eligibility verification, built and running on Midnight." },
   { id: "solution", text: "One document in, one fact out. A user proves they meet a policy, like an income threshold, and nothing else is revealed on-chain." },
   { id: "step1", text: "Here is the flow, end to end. The user submits a document, once." },
@@ -24,11 +24,26 @@ export const LINES = [
   { id: "outro", text: "CipherComply. A working implementation of private financial verification, on Midnight." },
 ];
 
+// Narration for the live demo recording: VO_SET=demo node scripts/make-voiceover.mjs
+const DEMO_LINES = [
+  { id: "d1", text: "This is a real run of CipherComply, on Midnight's Preview network." },
+  { id: "d2", text: "The policy is public: an annual income of at least eighty-five thousand dollars. We connect a Lace wallet." },
+  { id: "d3", text: "We accept the disclosure, and attach a sample payslip." },
+  { id: "d4", text: "The document is read, the rules are applied, and the oracle signs an attestation. Eligible." },
+  { id: "d5", text: "A zero-knowledge proof is generated, and the wallet approves the transaction." },
+  { id: "d6", text: "Verified on Midnight. The transaction is final, and it is on the explorer." },
+  { id: "d7", text: "Now, a separate app. Its member area is locked. We prove we hold the key, and it reads the status from the chain." },
+  { id: "d8", text: "Access granted. The app never saw a document, an income, or a wallet address." },
+];
+
+const DEMO = process.env.VO_SET === "demo";
+export const LINES = DEMO ? DEMO_LINES : FILM_LINES;
+
 const env = readFileSync(new URL("../../.env", import.meta.url), "utf8");
 const key = /^GEMINI_API_KEY=(.+)$/m.exec(env)?.[1]?.trim().replace(/^["']|["']$/g, "");
 if (!key) throw new Error("GEMINI_API_KEY is not set in .env");
 
-const outDir = new URL("../public/voiceover/", import.meta.url);
+const outDir = new URL(DEMO ? "../public/voiceover-demo/" : "../public/voiceover/", import.meta.url);
 mkdirSync(outDir, { recursive: true });
 
 const wav = (pcm, rate) => {
@@ -93,5 +108,5 @@ for (const line of LINES) {
   const buf = readFileSync(file);
   durations[line.id] = Number(((buf.length - 44) / buf.readUInt32LE(28)).toFixed(3));
 }
-writeFileSync(new URL("../src/voiceover.json", import.meta.url), JSON.stringify(durations, null, 2) + "\n");
+writeFileSync(new URL(DEMO ? "../src/voiceover-demo.json" : "../src/voiceover.json", import.meta.url), JSON.stringify(durations, null, 2) + "\n");
 console.log(`${Object.keys(durations).length}/${LINES.length} clips present, ${failed} failed this run`);

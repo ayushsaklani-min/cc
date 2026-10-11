@@ -46,3 +46,16 @@ jobs:
       # Expiry-assertion gate, compiler-version gate + compile, typecheck, unit and
       # simulator tests, golden vectors, subject-ownership tests.
       - run: npm run ci
+
+  # Re-checks the recorded transactions and ledger state against the public
+  # indexer. Separate from `verify` because it depends on a live network.
+  onchain-evidence:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 25.2.1
+          cache: npm
+      - run: npm ci
+      - run: npm run verify:onchain

@@ -1,7 +1,7 @@
 // Synthesises the soundtrack (public/music.wav). Original, generated from
 // scratch: a slow pad, a bass, a plucked arpeggio and a soft pulse.
 // 96 bpm. Pass the video length in seconds; it is rounded up to whole bars.
-//   node scripts/make-music.mjs 100
+//   node scripts/make-music.mjs 100 [file name, default music.wav]
 import { mkdirSync, writeFileSync } from "node:fs";
 
 const SR = 44100;
@@ -157,5 +157,6 @@ header.write("data", 36);
 header.writeUInt32LE(data.length, 40);
 
 mkdirSync(new URL("../public/", import.meta.url), { recursive: true });
-writeFileSync(new URL("../public/music.wav", import.meta.url), Buffer.concat([header, data]));
-console.log(`music.wav written: ${DURATION}s, peak before gain ${peak.toFixed(3)}`);
+const name = process.argv[3] ?? "music.wav";
+writeFileSync(new URL(`../public/${name}`, import.meta.url), Buffer.concat([header, data]));
+console.log(`${name} written: ${DURATION}s, peak before gain ${peak.toFixed(3)}`);

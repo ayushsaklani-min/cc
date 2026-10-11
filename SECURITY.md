@@ -1,8 +1,9 @@
 # Security
 
-**Status: development only.** This code has not been audited, has not settled a
-transaction on any network, and must not be deployed to Preprod or Mainnet in
-its current state. See SPIKE-REPORT.md for what has and has not been verified.
+**Status: development preview.** This code has not been independently audited. It
+runs on the Midnight Preview test network only and must not be deployed to
+Mainnet in its current state. PROOF.md lists what has settled on-chain;
+SPIKE-REPORT.md records what has and has not been verified.
 
 ## Reporting
 
