@@ -1,0 +1,42 @@
+{
+  "network": "preview",
+  "indexerUrl": "https://indexer.preview.midnight.network/api/v4/graphql",
+  "indexerWsUrl": "wss://indexer.preview.midnight.network/api/v4/graphql/ws",
+  "contractAddress": "f83caf8a6c4bc962ff396efca36732010641e967f7d57dc9768d7dcb65cca9dc",
+  "domain": "ciphercomply:preview:v1",
+  "policyId": "age-over-18:v1",
+  "minAssurance": 2,
+  "transactions": [
+    {
+      "label": "Contract deployment (over-18 policy)",
+      "identifier": "000ce5405ac10bf78b8eef47e212f87438df2bc1b5f258085e3d7709025330c282",
+      "hash": "d90e2d3d3bd49845fdcf054acb3852c2057d2de15389881b005b40829b4727f0",
+      "block": 1250246,
+      "action": "ContractDeploy"
+    },
+    {
+      "label": "Attestation settled (CLI wallet, end-to-end test)",
+      "identifier": "00de534bfa6cf459886d4ea21e4d33a9e97212e488cdfe73d08cc5b9b668f048a8",
+      "hash": "317d4d7411ab3a286a247b3c2986b4b13b7821bfb7d09d82580c37018a04e0e4",
+      "block": 1250264,
+      "action": "ContractCall"
+    }
+  ],
+  "ledger": {
+    "recordedAt": "2026-10-11T12:21:42.617Z",
+    "oracleKeyId": "1",
+    "oraclePublicKey": {
+      "x": "26e5c7c75ef82a1a8c94c69d3a487d0c538b6eb08918e27524fcce4c5496c5a2",
+      "y": "34684ca74345cb6b22e10aeb5b6a41f55fbbfc2c2a804751c593687eb97b0fac"
+    },
+    "adminHash": "922bf148d66c762048948b8ae54b8aaade7a61ad6d801dc8367a62a37b3bf25d",
+    "verified": [
+      {
+        "subject": "6c6329b8b7949d45b4750b00bf60e49dcb600692be2d091df2d56541956ce3c0",
+        "validUntil": "1791808437"
+      }
+    ],
+    "revoked": [],
+    "usedNullifiers": 1
+  }
+}

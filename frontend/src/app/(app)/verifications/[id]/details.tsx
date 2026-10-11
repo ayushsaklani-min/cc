@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useService } from "@/components/service";
 import { Card, Details, Eyebrow, LinkButton, Notice, Row } from "@/components/ui";
 import {
@@ -11,8 +12,8 @@ import {
   useOnChainSubmit,
   VerificationStepper,
 } from "@/components/verification";
-import { formatBytes, formatDateTime, formatMoney } from "@/lib/copy";
-import { useVerifications } from "@/lib/store";
+import { formatBytes, formatDateTime, policyRequirement } from "@/lib/copy";
+import { setSelectedPolicy, useVerifications } from "@/lib/store";
 
 export function VerificationDetails({ id }: { id: string }) {
   const { service } = useService();
@@ -21,8 +22,15 @@ export function VerificationDetails({ id }: { id: string }) {
   const { status: chain, check } = useChainConfirmation(record);
   const walletSubmit = useOnChainSubmit(record, service.kind === "ready" ? service.config : null, check);
 
+  // A record belongs to one policy and one contract: show it against that one.
+  const servedPolicy = service.kind === "ready" ? service.config.policy.id : undefined;
+  useEffect(() => {
+    if (record && servedPolicy && record.policyId !== servedPolicy) setSelectedPolicy(record.policyId);
+  }, [record, servedPolicy]);
+
   if (service.kind !== "ready") return null;
   const { config } = service;
+  if (record && record.policyId !== config.policy.id) return null;
 
   if (records === null) {
     return (
@@ -83,9 +91,7 @@ export function VerificationDetails({ id }: { id: string }) {
           <Row label="Eligibility decision">{eligibility}</Row>
           <Row label="On-chain confirmation">{onChain}</Row>
           <AssuranceRows record={record} />
-          <Row label="Policy">
-            Annual income of at least {formatMoney(config.policy.thresholdMinorUnits, config.policy.currency)}
-          </Row>
+          <Row label="Policy">{policyRequirement(config.policy)}</Row>
           <Row label="Valid until">
             {record.chainValidUntil !== undefined ? formatDateTime(record.chainValidUntil * 1000) : "Not known until confirmed on-chain"}
           </Row>

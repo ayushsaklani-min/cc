@@ -57,6 +57,7 @@ const TOKEN_KEY = "cc.dev-session-token";
 const SECRET_KEY = "cc.user-secret";
 const HISTORY_KEY = "cc.verifications";
 const CONSENT_KEY = "cc.processing-consent";
+const POLICY_KEY = "cc.policy";
 
 const listeners = new Set<() => void>();
 const notify = () => listeners.forEach((l) => l());
@@ -93,6 +94,15 @@ export function setUserSecretHex(hex: string | null): void {
   notify();
 }
 export const useHasUserSecret = () => useStored(() => localStorage, SECRET_KEY) !== null;
+
+/** The policy the workspace is showing. Null means the deployment's default. */
+export const useSelectedPolicy = () => useStored(() => localStorage, POLICY_KEY);
+export const getSelectedPolicy = (): string | null => (typeof localStorage === "undefined" ? null : localStorage.getItem(POLICY_KEY));
+export function setSelectedPolicy(id: string | null): void {
+  if (id === null) localStorage.removeItem(POLICY_KEY);
+  else localStorage.setItem(POLICY_KEY, id);
+  notify();
+}
 
 /** The disclosure version the user acknowledged, so a changed disclosure asks again. */
 export const useConsent = () => useStored(() => localStorage, CONSENT_KEY);

@@ -1,0 +1,9 @@
+[
+  {
+    "name": "DigiLocker (Digital India Corporation, National e-Governance Division)",
+    "fingerprint256": "66bd3cc8a352af6210bdfb3f9a7d94b963d3e467327095b26312a8eac7ecce9a",
+    "issuedBy": "ProDigiSign Sub CA DSC 2022",
+    "validUntil": "2029-02-11",
+    "observed": "Signing certificate of a PAN Verification Record downloaded from DigiLocker on 2026-10-11."
+  }
+]

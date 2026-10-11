@@ -7,8 +7,8 @@ import { useService } from "@/components/service";
 import { Button, Card, Eyebrow, LinkButton, Notice, Row } from "@/components/ui";
 import { UploadDropzone } from "@/components/upload-dropzone";
 import { ResultPanel, TechnicalDetails, useChainConfirmation, useOnChainSubmit, VerificationStepper } from "@/components/verification";
-import { DOCUMENT_TYPE_LABEL, formatMoney, reasonText } from "@/lib/copy";
-import { saveVerification, setConsent, useConsent, useVerifications, type VerificationRecord } from "@/lib/store";
+import { DOCUMENT_TYPE_LABEL, policyRequirement, reasonText } from "@/lib/copy";
+import { saveVerification, setConsent, setSelectedPolicy, useConsent, useVerifications, type VerificationRecord } from "@/lib/store";
 import { currentSubject, newRecord, runVerification, validateFile } from "@/lib/verify-flow";
 
 const BUSY = ["uploading", "analyzing", "proving", "submitting"];
@@ -82,11 +82,42 @@ export default function VerifyPage() {
         <h2 id="policy-heading" className="font-display text-xl font-medium tracking-[-0.02em]">
           1. Policy
         </h2>
-        <p className="mt-2 text-[15px] text-muted">This deployment enforces one policy.</p>
+        {config.policies.length > 1 ? (
+          <>
+            <p className="mt-2 text-[15px] text-muted">Choose what you want to prove. Each policy has its own contract on Midnight.</p>
+            <div role="radiogroup" aria-label="Policy" className="mt-4 flex flex-wrap gap-3">
+              {config.policies.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={p.id === policy.id}
+                  disabled={busy || record !== undefined}
+                  onClick={() => setSelectedPolicy(p.id)}
+                  className={`border px-4 py-2.5 text-[15px] font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${p.id === policy.id ? "border-ink bg-ink text-surface" : "border-line-strong bg-transparent text-ink hover:border-ink"}`}
+                >
+                  {p.title}
+                </button>
+              ))}
+            </div>
+          </>
+        ) : (
+          <p className="mt-2 text-[15px] text-muted">This deployment enforces one policy.</p>
+        )}
         <dl className="mt-4 divide-y divide-line border-y border-line">
-          <Row label="Requirement">Annual income of at least {formatMoney(policy.thresholdMinorUnits, policy.currency)}</Row>
-          <Row label="Accepted documents">{policy.allowedDocumentTypes.map((t) => DOCUMENT_TYPE_LABEL[t] ?? t).join(", ")}</Row>
-          <Row label="Document age">No older than {policy.freshnessDays} days</Row>
+          <Row label="Requirement">{policyRequirement(policy)}</Row>
+          {policy.kind === "signed-age" ? (
+            <>
+              <Row label="Accepted document">{policy.acceptedDocument}</Row>
+              <Row label="Must be signed by">{policy.trustedSigners.join("; ")}</Row>
+              <Row label="Document age">Signed within the last {policy.freshnessDays} days</Row>
+            </>
+          ) : (
+            <>
+              <Row label="Accepted documents">{policy.allowedDocumentTypes.map((t) => DOCUMENT_TYPE_LABEL[t] ?? t).join(", ")}</Row>
+              <Row label="Document age">No older than {policy.freshnessDays} days</Row>
+            </>
+          )}
           <Row label="Policy version">
             <span className="font-mono text-[13px]">{policy.id}</span>
           </Row>
@@ -109,8 +140,9 @@ export default function VerifyPage() {
             onChange={(e) => setConsent(e.target.checked ? version : null)}
           />
           <span className="text-[15px]">
-            I understand that my document will be sent to this server and to {config.processing.extractionProvider}, and what
-            becomes public if I confirm on-chain.
+            {config.processing.extractionProvider
+              ? `I understand that my document will be sent to this server and to ${config.processing.extractionProvider}, and what becomes public if I confirm on-chain.`
+              : "I understand that my document will be sent to this server, which can read it in full, and what becomes public if I confirm on-chain."}
           </span>
         </label>
       </Card>

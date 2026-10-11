@@ -3,7 +3,7 @@
 // Nothing here uses the session token, the wallet, or any document.
 "use client";
 
-import type { PublicConfig } from "./api";
+import { scoped, type PublicConfig } from "./api";
 import { getUserSecretHex } from "./store";
 
 /** The contract's hashing and curve code, loaded on demand because it carries WebAssembly. */
@@ -20,7 +20,7 @@ export type AccessResult =
   | { kind: "error" };
 
 const post = (path: string, body: unknown) =>
-  fetch(`/api/example/access/${path}`, {
+  fetch(scoped(`/api/example/access/${path}`), {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(body),

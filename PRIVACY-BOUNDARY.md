@@ -42,3 +42,18 @@ combined with server-side AI is contradictory and is not offered.
 - Clients receive reason codes, never raw error text.
 - Retention periods for documents, registry rows and idempotency records are
   not yet defined. A retention policy is required before any real data is handled.
+
+## The signed-record policy (aged 18 or over)
+
+- The uploaded PAN Verification Record goes to the gateway only. It is not sent
+  to a model or to any other service.
+- The gateway reads the PAN, the name and the date of birth in order to check
+  the signature and the age. None of the three is returned to the client,
+  written to the registry, logged, or placed in the attestation.
+- The registry stores an HMAC of the PAN under the server-only key, so the same
+  person cannot verify a second subject. It does not store the PAN or the file.
+- The attestation carries no amount (0, currency `XXX`). On-chain the result is
+  the same shape as for any policy: a pseudonymous subject, a validity date and
+  a nullifier.
+- A relying application learns that the subject met the over-18 policy. It does
+  not learn the age, the date of birth or the PAN.

@@ -7,7 +7,7 @@ import { useService } from "@/components/service";
 import { Card, Eyebrow, LinkButton, Row } from "@/components/ui";
 import { AssuranceRows, OutcomeBadge, useChainConfirmation } from "@/components/verification";
 import { useWallet, WalletButton, walletStatusText } from "@/components/wallet";
-import { formatBytes, formatDateTime, formatMoney, MIME_LABEL, PHASE_LABEL } from "@/lib/copy";
+import { formatBytes, formatDateTime, policyRequirement, MIME_LABEL, PHASE_LABEL } from "@/lib/copy";
 import { useVerifications } from "@/lib/store";
 
 export default function Dashboard() {
@@ -47,7 +47,7 @@ export default function Dashboard() {
           </h2>
           <p className="mt-2 text-[15px] text-muted">Upload the document required by your selected policy.</p>
           <dl className="mt-6 divide-y divide-line border-y border-line">
-            <Row label="Policy">Annual income of at least {formatMoney(policy.thresholdMinorUnits, policy.currency)}</Row>
+            <Row label="Policy">{policyRequirement(policy)}</Row>
             <Row label="Accepted files">
               {config.upload.mimeTypes.map((m) => MIME_LABEL[m] ?? m).join(", ")} · up to {formatBytes(config.upload.maxBytes)}
             </Row>

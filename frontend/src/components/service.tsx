@@ -4,9 +4,9 @@
 
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { fetchConfig, fetchSession, type ConfigResult, type SessionInfo } from "@/lib/api";
-import { useSessionToken } from "@/lib/store";
+import { setSelectedPolicy, useSelectedPolicy, useSessionToken } from "@/lib/store";
 
-export type ServiceState = { kind: "loading" } | ConfigResult;
+export type ServiceState = { kind: "loading" } | Exclude<ConfigResult, { kind: "unknown_policy" }>;
 export type SessionState =
   | { kind: "loading" }
   | { kind: "signed_out" }
@@ -21,14 +21,20 @@ export function ServiceProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<SessionState>({ kind: "loading" });
   const [generation, setGeneration] = useState(0);
   const token = useSessionToken();
+  const policy = useSelectedPolicy();
 
   useEffect(() => {
     let live = true;
-    void fetchConfig().then((r) => live && setService(r));
+    void fetchConfig().then((r) => {
+      if (!live) return;
+      // A policy remembered from another deployment: drop it and load the default.
+      if (r.kind === "unknown_policy") setSelectedPolicy(null);
+      else setService(r);
+    });
     return () => {
       live = false;
     };
-  }, [generation]);
+  }, [generation, policy]);
 
   useEffect(() => {
     let live = true;

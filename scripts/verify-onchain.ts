@@ -1,13 +1,16 @@
 // Re-checks the recorded evidence against the public Midnight indexer.
 // Needs no wallet, no secrets and no .env: everything it reads is public.
 //
-//   npm run verify:onchain             compare the chain with evidence/onchain.json
-//   npm run verify:onchain -- --record rewrite the ledger snapshot from the chain
+//   npm run verify:onchain                      compare the chain with every evidence file
+//   npx tsx scripts/verify-onchain.ts <file>     one evidence file (default evidence/onchain.json)
+//   npx tsx scripts/verify-onchain.ts <file> --record   rewrite its ledger snapshot from the chain
 //
 // The transactions in the evidence file were produced by the runs described in
 // SPIKE-REPORT.md. Recording refreshes only what the chain itself reports for
 // them (hash, block, action) and the ledger snapshot; it never invents entries.
 import { readFileSync, writeFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 import { indexerPublicDataProvider } from "@midnight-ntwrk/midnight-js-indexer-public-data-provider";
 import { setNetworkId } from "@midnight-ntwrk/midnight-js/network-id";
 import { WebSocket } from "ws";
@@ -43,7 +46,8 @@ interface Evidence {
   };
 }
 
-const file = new URL("../evidence/onchain.json", import.meta.url);
+const named = process.argv.slice(2).find((a) => a.endsWith(".json"));
+const file = named ? pathToFileURL(resolve(named)) : new URL("../evidence/onchain.json", import.meta.url);
 const evidence = JSON.parse(readFileSync(file, "utf8")) as Evidence;
 const record = process.argv.includes("--record");
 const indexerUrl = process.env.MIDNIGHT_INDEXER_URL || evidence.indexerUrl;
@@ -119,7 +123,7 @@ if (ledger === undefined) {
     usedNullifiers: Number(ledger.usedNullifiers.size()),
   };
   writeFileSync(file, `${JSON.stringify(evidence, null, 2)}\n`);
-  console.log(`recorded ${evidence.transactions.length} transactions and the ledger snapshot to evidence/onchain.json`);
+  console.log(`recorded ${evidence.transactions.length} transactions and the ledger snapshot to ${named ?? "evidence/onchain.json"}`);
 } else {
   check("contract state is indexed", true);
   // Sealed at deployment: these can never change.

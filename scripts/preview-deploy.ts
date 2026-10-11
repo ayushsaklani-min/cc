@@ -1,6 +1,7 @@
 // Deploys Profile A to the configured network and records the address in .env.
 //
-//   npm run deploy
+//   npm run deploy            the default (income) policy
+//   npm run deploy -- --age   the signed-record "over 18" policy, as its own contract
 //
 // Development keys only: the oracle scalar and the admin secret are generated
 // locally and stored in .env. Production custody is a separate design.
@@ -32,9 +33,14 @@ const secret = (name: string, make: () => string): string => {
   return value;
 };
 
-if (process.env.CIPHERCOMPLY_CONTRACT_ADDRESS) {
-  throw new Error("CIPHERCOMPLY_CONTRACT_ADDRESS is already set; remove it from .env to deploy a new instance");
+// Each policy is sealed into its own contract instance, with the same oracle and admin keys.
+const target = process.argv.includes("--age")
+  ? { policyId: "age-over-18:v1", addressVar: "CIPHERCOMPLY_AGE_CONTRACT_ADDRESS" }
+  : { policyId: env("CIPHERCOMPLY_POLICY_ID"), addressVar: "CIPHERCOMPLY_CONTRACT_ADDRESS" };
+if (process.env[target.addressVar]) {
+  throw new Error(`${target.addressVar} is already set; remove it from .env to deploy a new instance`);
 }
+console.log(`deploying policy ${target.policyId}`);
 
 const oracleScalar = BigInt(secret("ORACLE_DEV_SECRET_SCALAR", () => generateSecretScalar().toString()));
 const adminSecret = Buffer.from(secret("ADMIN_DEV_SECRET_HEX", () => randomBytes(32).toString("hex")), "hex");
@@ -50,7 +56,7 @@ const deployed = await deploy(
   providers,
   {
     domain: text32(env("CIPHERCOMPLY_DOMAIN")),
-    policyId: text32(env("CIPHERCOMPLY_POLICY_ID")),
+    policyId: text32(target.policyId),
     minAssurance: BigInt(env("CIPHERCOMPLY_MIN_ASSURANCE")),
     oracleKey: publicKeyOf(oracleScalar),
     adminHash: pureCircuits.adminHashOf(new Uint8Array(adminSecret)),
@@ -59,7 +65,7 @@ const deployed = await deploy(
 );
 
 const { contractAddress, txId, blockHeight } = deployed.deployTxData.public;
-saveEnvVar("CIPHERCOMPLY_CONTRACT_ADDRESS", contractAddress);
+saveEnvVar(target.addressVar, contractAddress);
 console.log(`deployed in ${Math.round((Date.now() - started) / 1000)} s`);
 console.log(`contract address: ${contractAddress}`);
 console.log(`deploy tx:        ${txId} (block ${blockHeight})`);

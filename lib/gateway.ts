@@ -19,8 +19,9 @@ import {
   type IssuedAttestation,
   type OracleSigner,
 } from "./oracle-signer.ts";
-import { evaluatePolicy, type CrossCheck, type Identity, type Policy } from "./policy-engine.ts";
+import { evaluatePolicy, type CrossCheck, type Identity, type Policy, type VerificationMethod } from "./policy-engine.ts";
 import type { RateLimiter } from "./rate-limit.ts";
+import { evaluateSignedAge, type SignedAgeRule } from "./signed-age-policy.ts";
 import { OwnershipError, verifySubjectOwnership, type ChallengeStore, type OwnershipContext } from "./subject-ownership.ts";
 
 export const VERIFY_ENDPOINT = "/v1/verify";
@@ -52,6 +53,12 @@ export interface GatewayResponse {
 
 export interface GatewayConfig extends OwnershipContext {
   policy: Policy;
+  /**
+   * If set, this deployment decides from an issuer-signed record instead of
+   * reading a document with a model: `policy`, the extractors and the session's
+   * name are then not consulted.
+   */
+  signedAge?: SignedAgeRule;
   maxDocumentBytes: number;
   /** Attestation lifetime in seconds (spec: 900). */
   attestationTtl: number;
@@ -241,23 +248,38 @@ export async function handleVerify(deps: GatewayDeps, req: VerifyRequest): Promi
       return finalize(422, { status: "ineligible", reason: "subject_revoked", correlationId });
     }
 
-    // The two readings are independent, so they run concurrently.
-    const needsCrossCheck = config.policy.crossCheckToleranceBps !== undefined && deps.crossCheckExtractor !== undefined;
-    const [extracted, second] = await Promise.all([
-      deps.extractor.extract(req.document, mimeType),
-      needsCrossCheck ? deps.crossCheckExtractor?.extract(req.document, mimeType) : undefined,
-    ]);
-    const crossCheck: CrossCheck | undefined =
-      second !== undefined && deps.crossCheckExtractor
-        ? { extractorId: deps.crossCheckExtractor.id, primaryExtractorId: deps.extractor.id, extraction: second }
-        : undefined;
+    let verdict: { assuranceLevel: number; amountMinorUnits: bigint; currency: string; method: VerificationMethod };
+    let fingerprint: string;
+    if (config.signedAge) {
+      const signed = await evaluateSignedAge(req.document, mimeType, config.signedAge, now);
+      if (signed.status !== "eligible") {
+        return finalize(422, { status: signed.status, reason: signed.reasonCode, correlationId });
+      }
+      // The issuer's signature is the evidence; there is no amount. "XXX" is ISO 4217 for "no currency".
+      verdict = { assuranceLevel: 2, amountMinorUnits: 0n, currency: "XXX", method: session.identity.method };
+      // Keyed on the person the record is about, not on the file: a fresh download
+      // of the same record must not earn the same person a second subject.
+      fingerprint = createHmac("sha256", config.fingerprintKey).update(signed.holderKey).digest("hex");
+    } else {
+      // The two readings are independent, so they run concurrently.
+      const needsCrossCheck = config.policy.crossCheckToleranceBps !== undefined && deps.crossCheckExtractor !== undefined;
+      const [extracted, second] = await Promise.all([
+        deps.extractor.extract(req.document, mimeType),
+        needsCrossCheck ? deps.crossCheckExtractor?.extract(req.document, mimeType) : undefined,
+      ]);
+      const crossCheck: CrossCheck | undefined =
+        second !== undefined && deps.crossCheckExtractor
+          ? { extractorId: deps.crossCheckExtractor.id, primaryExtractorId: deps.extractor.id, extraction: second }
+          : undefined;
 
-    const verdict = evaluatePolicy(extracted, session.identity, config.policy, isoDay(now), crossCheck);
-    if (verdict.status !== "eligible") {
-      return finalize(422, { status: verdict.status, reason: verdict.reasonCode, correlationId });
+      const evaluated = evaluatePolicy(extracted, session.identity, config.policy, isoDay(now), crossCheck);
+      if (evaluated.status !== "eligible") {
+        return finalize(422, { status: evaluated.status, reason: evaluated.reasonCode, correlationId });
+      }
+      verdict = evaluated;
+      fingerprint = createHmac("sha256", config.fingerprintKey).update(req.document).digest("hex");
     }
 
-    const fingerprint = createHmac("sha256", config.fingerprintKey).update(req.document).digest("hex");
     let reserved;
     try {
       reserved = deps.registry.reserve(fingerprint, subjectHex, now);

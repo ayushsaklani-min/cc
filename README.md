@@ -22,8 +22,8 @@ No wallet, account or secret is needed for any of this.
 
 ```
 npm ci
-npm run verify:onchain   # 35 checks against the public Midnight indexer
-npm test                 # 179 offline tests
+npm run verify:onchain   # 55 checks against the public Midnight indexer
+npm test                 # 200 offline tests
 ```
 
 Or without installing anything, open the
@@ -51,6 +51,17 @@ A relying application then asks one question: is this subject verified? It can
 ask the status API, or have the visitor prove control of the subject first, as
 the example app does.
 
+## Two policies, two kinds of evidence
+
+| Policy | Evidence | How it is checked | Contract |
+|---|---|---|---|
+| Annual income of at least USD 85,000 | A payslip, tax return or employer letter | Read by a model, cross-checked by a second model, decided by fixed rules | [`f414a418…39b322df`](https://preview.midnightexplorer.com/contracts/f414a418e7f7878e1ac7103954084cd1454fdc201bc6c799e17e0dbb39b322df) |
+| Aged 18 or over | DigiLocker's PAN Verification Record, the original signed PDF | The issuer's digital signature is verified against a pinned certificate, then the record is read by rule. No model is involved. | [`f83caf8a…65cca9dc`](https://preview.midnightexplorer.com/contracts/f83caf8a6c4bc962ff396efca36732010641e967f7d57dc9768d7dcb65cca9dc) |
+
+The second policy is the stronger design: an edited or home-made PDF is refused
+because its signature no longer verifies, and one person's record can verify
+only one subject.
+
 ## What is on the ledger
 
 | On the ledger | Never on the ledger |
@@ -69,6 +80,7 @@ itself. [PRIVACY-BOUNDARY.md](PRIVACY-BOUNDARY.md) has the full boundary.
 | Part | Where | Notes |
 |---|---|---|
 | Contract | `contracts/ciphercomply.schnorr.compact` | Three circuits: verify and register, rotate oracle key, revoke subject. Schnorr signature verification is composed in-circuit, because Compact 0.31.1 has no built-in for it. Block-time expiry, nullifiers, revocation epochs. |
+| Signed-document check | `lib/signed-pdf.ts`, `lib/pan-record.ts`, `lib/signed-age-policy.ts` | Verifies a PDF's detached CMS signature over the whole file against pinned issuers (`trust/document-signers.json`), then reads the record by rule. |
 | Oracle signer | `lib/oracle-signer.ts` | Jubjub Schnorr, with golden vectors. No HTTP surface. |
 | Policy engine | `lib/policy-engine.ts` | Deterministic rules: document type, issuer, name, date, amount, cross-check between two independent readings. |
 | Gateway | `lib/gateway.ts`, `lib/http.ts` | Subject-ownership proof, idempotency, rate limits, one-use document registry. |
@@ -99,10 +111,19 @@ passes and several that are refused for different reasons.
 - **Sign-in is a development token** and the oracle key is held in process
   memory. Production authentication and key custody are not built. The hosted
   demo runs in an explicit demo mode that is refused on any network but Preview.
-- **A document's text is trusted once read.** The service does not yet verify
-  who issued a document, so an edited payslip could pass. Verifying issuer
-  signatures is the next piece of work.
-- **One policy.** Income of at least USD 85,000, from an allow-listed issuer.
+- **The income policy trusts a document's text once read.** It does not verify
+  who issued the document, so an edited payslip could pass. The over-18 policy
+  does not have this weakness: it accepts only an issuer-signed record.
+- **A signed record is a bearer document.** The over-18 policy proves the record
+  is genuine and unedited, not that the person presenting it is the person it
+  is about. One record can verify only one subject.
+- **Issuer trust is a pinned certificate,** not a validated chain. DigiLocker's
+  signing certificate is valid until February 2029 and must be re-pinned when
+  it rotates. Only one real record has been tested against.
+- **Two policies.** Income of at least USD 85,000, and aged 18 or over. Each is
+  its own contract deployment.
+- **Handling PAN records is regulated in India.** This is a prototype tested
+  with the author's own record; accepting other people's needs legal advice.
 - **The verification key lives in the browser.** Clearing browser data loses
   the ability to act as that subject.
 - **A proof server is required** by the user's wallet to submit on-chain.

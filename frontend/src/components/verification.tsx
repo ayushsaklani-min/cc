@@ -157,7 +157,7 @@ export function useChainConfirmation(record: VerificationRecord | undefined) {
   const check = useCallback(async () => {
     if (!record) return;
     setStatus((s) => (s.kind === "idle" ? { kind: "checking" } : s));
-    const result = await fetchChainStatus(record.subject);
+    const result = await fetchChainStatus(record.subject, record.policyId);
     setStatus(result);
     if (result.kind === "confirmed" && record.attestation && result.validUntil === String(record.attestation.statusValidUntil)) {
       saveVerification({ ...record, phase: "confirmed", chainValidUntil: Number(result.validUntil), confirmedAt: Date.now() });

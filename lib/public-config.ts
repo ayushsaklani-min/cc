@@ -9,20 +9,36 @@ export interface PublicConfig {
   contractAddressBytes: string;
   domain: string;
   policyId: string;
-  policy: {
-    id: string;
-    version: number;
-    currency: string;
-    thresholdMinorUnits: string;
-    allowedDocumentTypes: readonly string[];
-    freshnessDays: number;
-    crossCheck: boolean;
-  };
+  /** Every policy this deployment offers. Each is a separate contract; this config describes one of them. */
+  policies: { id: string; title: string }[];
+  policy:
+    | {
+        kind: "income";
+        id: string;
+        version: number;
+        currency: string;
+        thresholdMinorUnits: string;
+        allowedDocumentTypes: readonly string[];
+        freshnessDays: number;
+        crossCheck: boolean;
+      }
+    | {
+        /** Decided from an issuer-signed record; no model reads the document. */
+        kind: "signed-age";
+        id: string;
+        version: number;
+        minimumAge: number;
+        acceptedDocument: string;
+        freshnessDays: number;
+        /** Names of the issuers whose signature is accepted. */
+        trustedSigners: string[];
+      };
   upload: { maxBytes: number; mimeTypes: readonly string[] };
   processing: {
     mode: "server-mediated";
-    extractionProvider: string;
-    extractionModel: string;
+    /** Null when no model is involved. */
+    extractionProvider: string | null;
+    extractionModel: string | null;
     crossCheckModel: string | null;
   };
   attestationTtlSeconds: number;

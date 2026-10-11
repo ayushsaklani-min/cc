@@ -30,9 +30,9 @@ export default function PrivacySettings() {
         </h2>
         <dl className="mt-4 divide-y divide-line border-y border-line">
           <Row label="Mode">Server-mediated</Row>
-          <Row label="Document reader">{processing.extractionProvider}</Row>
+          <Row label="Document reader">{processing.extractionProvider ?? "No AI model: issuer signature and fixed rules"}</Row>
           <Row label="Model">
-            <span className="font-mono text-[13px]">{processing.extractionModel}</span>
+            {processing.extractionModel ? <span className="font-mono text-[13px]">{processing.extractionModel}</span> : "Not used"}
           </Row>
           <Row label="Independent second reading">
             {processing.crossCheckModel ? <span className="font-mono text-[13px]">{processing.crossCheckModel}</span> : "Not used"}

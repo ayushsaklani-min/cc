@@ -49,11 +49,21 @@ public network yet.
 
 ## Known gaps
 
-- No transaction has been submitted to Preview; chain-time behaviour and proof
-  acceptance on a live network are unverified.
+- Node-side rejection of an invalid proof is untested: every refusal observed so far was produced by
+  local circuit execution before submission.
+- **Signed records are bearer documents.** The over-18 policy verifies that DigiLocker signed exactly
+  these bytes. It does not verify that the uploader is the person named in the record. Anyone who obtains
+  someone's signed record can use it once; the keyed PAN fingerprint then blocks every later use, including
+  by the real holder.
+- **Issuer trust is a pinned leaf certificate** (`trust/document-signers.json`), not a chain validated to
+  the Indian root authority, and revocation of that certificate is not checked. A compromised or rotated
+  issuer key needs a manual update.
+- **The PDF signature verifier is written in this repository** (a minimal DER reader and CMS checks in
+  `lib/signed-pdf.ts`). It accepts one narrow shape and refuses the rest, but it has not been reviewed.
+- The server sees the full PAN record. It stores a keyed fingerprint of the PAN, not the PAN, and does not
+  store the document; nothing technical prevents an operator from logging it.
 - The admin is a single secret (prototype-grade, as the spec notes).
 - No KMS or HSM signs Jubjub Schnorr natively; production custody design is open.
 - A hosted demo (`CIPHERCOMPLY_DEMO_MODE=preview-demo`, Preview network only) keeps the oracle key in the
   host's environment variables and authenticates with a shared bearer token. Anyone holding that token can
   submit documents and consume the extraction quota; anyone with access to the host can sign attestations.
-- The chain reader, the model client, the web routes and the frontend are not built.

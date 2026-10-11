@@ -1,6 +1,11 @@
 // Typed client for the /api/v1 routes. Nothing here invents a result: every
 // state the UI shows comes from one of these responses.
 import type { PublicConfig } from "../../../lib/public-config";
+import { getSelectedPolicy } from "./store";
+
+/** An API path addressed to a policy: the one given, or the one the workspace is showing. */
+export const scoped = (path: string, policy: string | null | undefined = getSelectedPolicy()): string =>
+  policy ? `${path}?policy=${encodeURIComponent(policy)}` : path;
 
 export type { PublicConfig };
 
@@ -15,12 +20,15 @@ export type ConfigResult =
   | { kind: "ready"; config: PublicConfig }
   /** The server is up but has no contract or other required setting. */
   | { kind: "not_configured" }
+  /** The selected policy is not offered here; the caller should fall back to the default. */
+  | { kind: "unknown_policy" }
   | { kind: "unreachable" };
 
 export async function fetchConfig(): Promise<ConfigResult> {
   try {
-    const r = await fetch("/api/v1/config", { cache: "no-store" });
+    const r = await fetch(scoped("/api/v1/config"), { cache: "no-store" });
     if (r.status === 200) return { kind: "ready", config: (await r.json()) as PublicConfig };
+    if (r.status === 400) return { kind: "unknown_policy" };
     if (r.status === 503) return { kind: "not_configured" };
     return { kind: "unreachable" };
   } catch {
@@ -47,7 +55,7 @@ export interface ApiError {
 }
 
 export async function requestChallenge(token: string, subjectHex: string): Promise<{ serverNonce: string } | ApiError> {
-  const r = await fetch("/api/v1/challenge", {
+  const r = await fetch(scoped("/api/v1/challenge"), {
     method: "POST",
     headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
     body: JSON.stringify({ subject: subjectHex }),
@@ -86,7 +94,7 @@ export function submitVerification(
     form.set("document", file, file.name);
 
     const xhr = new XMLHttpRequest();
-    xhr.open("POST", "/api/v1/verify");
+    xhr.open("POST", scoped("/api/v1/verify"));
     xhr.setRequestHeader("authorization", `Bearer ${token}`);
     xhr.setRequestHeader("idempotency-key", idempotencyKey);
     xhr.upload.onprogress = (e) => {
@@ -111,9 +119,9 @@ export type ChainStatus =
   | { kind: "unavailable" };
 
 /** Finalized, indexed on-chain status for a subject. The only source of "Verified on Midnight". */
-export async function fetchChainStatus(subjectHex: string): Promise<ChainStatus> {
+export async function fetchChainStatus(subjectHex: string, policyId?: string): Promise<ChainStatus> {
   try {
-    const r = await fetch(`/api/v1/status/${subjectHex}`, { cache: "no-store" });
+    const r = await fetch(scoped(`/api/v1/status/${subjectHex}`, policyId ?? getSelectedPolicy()), { cache: "no-store" });
     if (r.status === 200) {
       const b = (await r.json()) as { verified: boolean; validUntil: string };
       return { kind: "confirmed", verified: b.verified, validUntil: b.validUntil };

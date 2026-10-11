@@ -1,5 +1,6 @@
 // User-facing wording for API reason codes and lifecycle phases. The API only
 // ever returns codes; this is the single place they become sentences.
+import type { PublicConfig } from "./api";
 import type { Phase } from "./store";
 
 export const PHASE_LABEL: Record<Phase, string> = {
@@ -32,6 +33,13 @@ export const PHASE_TONE: Record<Phase, Tone> = {
 };
 
 const REASONS: Record<string, string> = {
+  document_not_signed: "This file has no digital signature. Upload the original PDF exactly as you downloaded it from DigiLocker.",
+  signature_invalid: "The document's digital signature does not match its contents. It may have been edited or re-saved.",
+  signer_not_trusted: "The document is signed, but not by an issuer this policy accepts.",
+  unsupported_signature: "The document's digital signature is in a form this service does not accept.",
+  not_a_pan_record: "This signed document is not a PAN Verification Record.",
+  unreadable_record: "The signed record could not be read.",
+  under_minimum_age: "The date of birth in the record is below this policy's minimum age.",
   below_threshold: "The income shown in the document is below this policy's threshold.",
   document_type_not_allowed: "This type of document is not accepted for this policy.",
   issuer_not_allowed: "The document's issuer is not on this policy's list of accepted issuers.",
@@ -127,4 +135,11 @@ export function formatDuration(seconds: number): string {
   if (seconds % 86_400 === 0) return `${seconds / 86_400} day${seconds === 86_400 ? "" : "s"}`;
   if (seconds % 60 === 0) return `${seconds / 60} minutes`;
   return `${seconds} seconds`;
+}
+
+/** One line saying what a policy requires. */
+export function policyRequirement(policy: PublicConfig["policy"]): string {
+  return policy.kind === "signed-age"
+    ? `Aged ${policy.minimumAge} or over`
+    : `Annual income of at least ${formatMoney(policy.thresholdMinorUnits, policy.currency)}`;
 }

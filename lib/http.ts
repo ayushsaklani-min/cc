@@ -13,7 +13,7 @@ import {
   type GatewayResponse,
   type VerifyRequest,
 } from "./gateway.ts";
-import { getGateway, NotConfiguredError, type Gateway } from "./server.ts";
+import { getGateway, NotConfiguredError, UnknownPolicyError, type Gateway } from "./server.ts";
 import { challengeDigest } from "./subject-ownership.ts";
 
 const json = (r: GatewayResponse): Response =>
@@ -24,6 +24,9 @@ const json = (r: GatewayResponse): Response =>
 
 const clientIp = (request: Request): string =>
   request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || request.headers.get("x-real-ip") || "unknown";
+
+/** The policy a request is addressed to, from its `policy` query parameter. Absent means the default policy. */
+const policyOf = (request: Request): string | undefined => new URL(request.url).searchParams.get("policy") ?? undefined;
 
 const field = (form: FormData, name: string): string | undefined => {
   const v = form.get(name);
@@ -36,12 +39,14 @@ async function serve(
   method: string,
   handler: (gateway: Gateway) => Promise<GatewayResponse>,
   gateway?: Gateway,
+  policyId?: string,
 ): Promise<Response> {
   const started = performance.now();
   let g: Gateway;
   try {
-    g = gateway ?? getGateway();
+    g = gateway ?? getGateway(policyId);
   } catch (e) {
+    if (e instanceof UnknownPolicyError) return json({ status: 400, body: { error: "unknown_policy" } });
     if (!(e instanceof NotConfiguredError)) throw e;
     // The reason names a variable, not a value; it is logged server-side only.
     console.error(JSON.stringify({ level: "error", event: "not_configured", detail: e.message }));
@@ -94,6 +99,7 @@ export function challengeRoute(request: Request, gateway?: Gateway): Promise<Res
       };
     },
     gateway,
+    policyOf(request),
   );
 }
 
@@ -132,12 +138,13 @@ export function verifyRoute(request: Request, gateway?: Gateway): Promise<Respon
       return handleVerify(deps, parsed);
     },
     gateway,
+    policyOf(request),
   );
 }
 
 /** GET /v1/status/{subject} */
-export function statusRoute(subjectHex: string, gateway?: Gateway): Promise<Response> {
-  return serve("/v1/status", "GET", ({ deps }) => handleStatus(deps, subjectHex), gateway);
+export function statusRoute(subjectHex: string, gateway?: Gateway, policyId?: string): Promise<Response> {
+  return serve("/v1/status", "GET", ({ deps }) => handleStatus(deps, subjectHex), gateway, policyId);
 }
 
 /**
@@ -153,6 +160,7 @@ export function accessChallengeRoute(request: Request, gateway?: Gateway): Promi
       return handleAccessChallenge(deps, typeof body.subject === "string" ? body.subject : undefined, clientIp(request));
     },
     gateway,
+    policyOf(request),
   );
 }
 
@@ -176,6 +184,7 @@ export function accessCheckRoute(request: Request, gateway?: Gateway): Promise<R
       });
     },
     gateway,
+    policyOf(request),
   );
 }
 
@@ -193,12 +202,13 @@ export function sessionRoute(request: Request, gateway?: Gateway): Promise<Respo
       };
     },
     gateway,
+    policyOf(request),
   );
 }
 
 /** GET /v1/config. Public, non-secret description of this deployment for the UI. */
-export function configRoute(gateway?: Gateway): Promise<Response> {
-  return serve("/v1/config", "GET", async (g) => ({ status: 200, body: { ...g.publicConfig } }), gateway);
+export function configRoute(gateway?: Gateway, policyId?: string): Promise<Response> {
+  return serve("/v1/config", "GET", async (g) => ({ status: 200, body: { ...g.publicConfig } }), gateway, policyId);
 }
 
 // The compiled circuits' public artifacts. A client proves only verifyAndRegister, but

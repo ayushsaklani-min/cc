@@ -22,7 +22,7 @@
     "e2e:full": "tsx scripts/preview-full-e2e.ts",
     "samples": "tsx scripts/make-samples.ts",
     "send": "tsx scripts/preview-send.ts",
-    "verify:onchain": "tsx scripts/verify-onchain.ts"
+    "verify:onchain": "tsx scripts/verify-onchain.ts evidence/onchain.json && tsx scripts/verify-onchain.ts evidence/onchain-age.json"
   },
   "dependencies": {
     "@midnight-ntwrk/compact-js": "2.5.1",

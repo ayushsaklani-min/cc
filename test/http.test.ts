@@ -1,5 +1,6 @@
 // The HTTP adapter with real Request/Response objects: multipart parsing,
 // headers, the challenge flow and metrics. The extractor is a stub.
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { openDatabase } from "../lib/db.ts";
 import { DocumentRegistry } from "../lib/document-registry.ts";
@@ -9,6 +10,7 @@ import { Metrics } from "../lib/metrics.ts";
 import { encodeSignature } from "../lib/oracle-signer.ts";
 import { SqliteRateLimiter } from "../lib/rate-limit.ts";
 import type { Gateway } from "../lib/server.ts";
+import { certificateFingerprint } from "../lib/signed-pdf.ts";
 import { ChallengeStore, proveSubjectOwnership } from "../lib/subject-ownership.ts";
 import { deserializeIssued } from "../lib/gateway.ts";
 import { extraction, POLICY } from "./fixtures.ts";
@@ -295,5 +297,103 @@ describe("example relying party", () => {
     expect((await accessChallengeRoute(post("challenge", { subject: "zz" }), gateway)).status).toBe(400);
     expect((await accessChallengeRoute(post("challenge", {}), gateway)).status).toBe(400);
     expect((await accessCheckRoute(post("check", { subject: "00".repeat(32) }), gateway)).status).toBe(400);
+  });
+});
+
+describe("signed-record policy (over 18, from a PAN Verification Record)", () => {
+  const fixture = (name: string) => new Uint8Array(readFileSync(new URL(`./fixtures/signed/${name}`, import.meta.url)));
+  const signer = {
+    fingerprint256: certificateFingerprint(readFileSync(new URL("./fixtures/signed/trusted-signer.pem", import.meta.url), "utf8")),
+    name: "Test issuer",
+  };
+
+  /** A gateway configured for the signed policy. Any call to a model extractor fails the test. */
+  function signedRig(freshnessSeconds = 20 * 365 * 86_400) {
+    const r = rig();
+    r.gateway.deps.config.signedAge = { id: "age-over-18:v1", version: 1, minimumAge: 18, freshnessSeconds, trustedSigners: [signer] };
+    r.gateway.deps.extractor = {
+      id: "must-not-run",
+      extract: async () => {
+        throw new Error("a model was asked to read a signed record");
+      },
+    };
+    return r;
+  }
+
+  let counter = 0;
+  async function submit(gateway: Gateway, world: ReturnType<typeof rig>["world"], document: Uint8Array, secret = world.userSecret) {
+    const subject = world.subjectOf(secret);
+    const c = await challenge(gateway, subject);
+    const { serverNonce } = (await c.json()) as { serverNonce: string };
+    const proof = proveSubjectOwnership(gateway.deps.config, secret, new Uint8Array(Buffer.from(serverNonce, "hex")));
+    const form = new FormData();
+    form.set("subject", hex(proof.subject));
+    form.set("ownerKey", be32(proof.ownerKey.x) + be32(proof.ownerKey.y));
+    form.set("serverNonce", serverNonce);
+    form.set("ownershipSignature", hex(encodeSignature(proof.signature)));
+    form.set("document", new Blob([new Uint8Array(document)], { type: "application/pdf" }), "record.pdf");
+    counter += 1;
+    const r = await verifyRoute(verifyRequest(form, { "idempotency-key": `idem-signed-${counter}` }), gateway);
+    return { status: r.status, body: (await r.json()) as Record<string, unknown> };
+  }
+
+  it("issues an attestation for an adult, without calling a model, and it redeems on the contract", async () => {
+    const { world, gateway } = signedRig();
+    const r = await submit(gateway, world, fixture("pan-adult.pdf"));
+    expect(r.status).toBe(201);
+    expect(r.body.status).toBe("eligible");
+    const issued = deserializeIssued(r.body.attestation as Record<string, unknown>);
+    expect(issued.attestation.amountMinorUnits).toBe(0n);
+    expect(new TextDecoder().decode(issued.attestation.currency)).toBe("XXX");
+    world.submit(issued.attestation, issued.signature);
+    expect(world.ledger.verifiedUntil.member(world.subject)).toBe(true);
+  });
+
+  it("returns nothing from the record: no PAN, name or date of birth", async () => {
+    const { world, gateway } = signedRig();
+    const r = await submit(gateway, world, fixture("pan-adult.pdf"));
+    const text = JSON.stringify(r.body);
+    for (const secret of ["ABCDE1234F", "ASHA", "1990"]) expect(text).not.toContain(secret);
+  });
+
+  it.each([
+    ["a minor", "pan-minor.pdf", "under_minimum_age"],
+    ["a signer that is not trusted", "pan-untrusted-signer.pdf", "signer_not_trusted"],
+    ["a signed document of another kind", "other-document.pdf", "not_a_pan_record"],
+  ])("refuses %s", async (_what, file, reason) => {
+    const { world, gateway } = signedRig();
+    const r = await submit(gateway, world, fixture(file));
+    expect(r.status).toBe(422);
+    expect(r.body).toMatchObject({ status: "ineligible", reason });
+  });
+
+  it("refuses a record whose date of birth was edited", async () => {
+    const { world, gateway } = signedRig();
+    const minor = fixture("pan-minor.pdf");
+    const at = Buffer.from(minor).toString("latin1").indexOf("01-06-2015") + 6;
+    const forged = new Uint8Array(minor);
+    forged.set(new TextEncoder().encode("1990"), at);
+    const r = await submit(gateway, world, forged);
+    expect(r.body).toMatchObject({ status: "ineligible", reason: "signature_invalid" });
+  });
+
+  it("refuses an unsigned PDF, however convincing its text", async () => {
+    const { world, gateway } = signedRig();
+    const r = await submit(gateway, world, samplePayslip());
+    expect(r.body).toMatchObject({ status: "ineligible", reason: "document_not_signed" });
+  });
+
+  it("refuses a record signed too long ago", async () => {
+    const { world, gateway } = signedRig(1);
+    const r = await submit(gateway, world, fixture("pan-adult.pdf"));
+    expect(r.body).toMatchObject({ status: "ineligible", reason: "document_stale" });
+  });
+
+  it("gives one person one subject: the same record cannot verify a second key", async () => {
+    const { world, gateway } = signedRig();
+    expect((await submit(gateway, world, fixture("pan-adult.pdf"))).status).toBe(201);
+    const second = await submit(gateway, world, fixture("pan-adult.pdf"), bytes(32, 0x22));
+    expect(second.status).toBe(409);
+    expect(second.body.error).toBe("document_already_claimed");
   });
 });
