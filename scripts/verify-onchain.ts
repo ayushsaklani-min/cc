@@ -90,7 +90,9 @@ for (const tx of evidence.transactions) {
     if (!found) throw new Error(`cannot record: transaction not found for "${tx.label}"`);
     tx.hash = found.hash;
     tx.block = found.block.height;
-    tx.action = found.contractActions.find((a) => a.address === evidence.contractAddress)?.__typename;
+    const action = found.contractActions.find((a) => a.address === evidence.contractAddress)?.__typename;
+    if (action === undefined) throw new Error(`cannot record: "${tx.label}" does not act on this contract`);
+    tx.action = action;
     continue;
   }
   check(`${tx.label}: transaction is indexed`, found !== undefined, tx.hash ?? tx.identifier);
