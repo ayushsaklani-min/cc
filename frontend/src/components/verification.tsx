@@ -4,6 +4,7 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import { Check, Circle, CircleAlert, CircleX, LoaderCircle } from "lucide-react";
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { fetchChainStatus, type ChainStatus, type PublicConfig } from "@/lib/api";
 import { ASSURANCE_LABEL, formatDateTime, METHOD_LABEL, PHASE_LABEL, PHASE_TONE, reasonText } from "@/lib/copy";
@@ -329,6 +330,11 @@ export function ResultPanel({
             {record.chainValidUntil ? `, valid until ${formatDateTime(record.chainValidUntil * 1000)}` : ""}.
           </p>
           <ExplorerLinks record={record} config={config} />
+          <p className="mt-3">
+            <Link href="/example" className="link-draw text-[15px] font-medium">
+              Use it: open the example app that checks this verification →
+            </Link>
+          </p>
         </Notice>
       );
     case "error":

@@ -16,6 +16,7 @@ const NAV = [
   { href: "/dashboard", label: "Overview" },
   { href: "/verify", label: "Verify" },
   { href: "/privacy", label: "Privacy & settings" },
+  { href: "/example", label: "Example app" },
 ];
 
 /** Network and wallet state as the server and browser actually report them. */

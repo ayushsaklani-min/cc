@@ -3,7 +3,7 @@
 import { describe, expect, it } from "vitest";
 import { openDatabase } from "../lib/db.ts";
 import { DocumentRegistry } from "../lib/document-registry.ts";
-import { challengeRoute, metricsRoute, statusRoute, verifyRoute } from "../lib/http.ts";
+import { accessChallengeRoute, accessCheckRoute, challengeRoute, metricsRoute, statusRoute, verifyRoute } from "../lib/http.ts";
 import { IdempotencyStore } from "../lib/idempotency.ts";
 import { Metrics } from "../lib/metrics.ts";
 import { encodeSignature } from "../lib/oracle-signer.ts";
@@ -214,5 +214,86 @@ describe("development secrets in production", () => {
     expect(devSecretsAllowed({ NODE_ENV: "production", CIPHERCOMPLY_DEMO_MODE: "preview-demo", MIDNIGHT_NETWORK: "preview" })).toBe(true);
     expect(devSecretsAllowed({ NODE_ENV: "production", CIPHERCOMPLY_DEMO_MODE: "preview-demo", MIDNIGHT_NETWORK: "mainnet" })).toBe(false);
     expect(devSecretsAllowed({ NODE_ENV: "production", CIPHERCOMPLY_DEMO_MODE: "preview-demo" })).toBe(false);
+  });
+});
+
+describe("example relying party", () => {
+  const post = (path: string, body: unknown) =>
+    new Request(`${BASE}/api/example/access/${path}`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+  /** Asks for a nonce, signs it with `secret`, and presents the proof. */
+  async function knock(gateway: Gateway, subject: Uint8Array, secret: Uint8Array, nonceOverride?: string) {
+    const c = await accessChallengeRoute(post("challenge", { subject: hex(subject) }), gateway);
+    expect(c.status).toBe(201);
+    const serverNonce = nonceOverride ?? ((await c.json()) as { serverNonce: string }).serverNonce;
+    const proof = proveSubjectOwnership(gateway.deps.config, secret, new Uint8Array(Buffer.from(serverNonce, "hex")));
+    const r = await accessCheckRoute(
+      post("check", {
+        subject: hex(subject),
+        ownerKey: be32(proof.ownerKey.x) + be32(proof.ownerKey.y),
+        serverNonce,
+        ownershipSignature: hex(encodeSignature(proof.signature)),
+      }),
+      gateway,
+    );
+    return { status: r.status, body: (await r.json()) as Record<string, string> };
+  }
+
+  const onChain = (gateway: Gateway, validUntil: bigint | undefined) => {
+    gateway.deps.chain = { revokedAt: async () => undefined, verifiedUntil: async () => validUntil };
+  };
+
+  it("grants access to the holder of a verified subject, without a session", async () => {
+    const { world, gateway } = rig();
+    const validUntil = BigInt(gateway.deps.now() + 3600);
+    onChain(gateway, validUntil);
+    const r = await knock(gateway, world.subject, world.userSecret);
+    expect(r.status).toBe(200);
+    expect(r.body).toEqual({ access: "granted", validUntil: validUntil.toString() });
+  });
+
+  it("denies a subject the chain does not show as verified", async () => {
+    const { world, gateway } = rig();
+    onChain(gateway, undefined);
+    const r = await knock(gateway, world.subject, world.userSecret);
+    expect(r.status).toBe(403);
+    expect(r.body.reason).toBe("not_verified");
+  });
+
+  it("denies an expired verification", async () => {
+    const { world, gateway } = rig();
+    onChain(gateway, BigInt(gateway.deps.now() - 1));
+    const r = await knock(gateway, world.subject, world.userSecret);
+    expect(r.status).toBe(403);
+    expect(r.body.reason).toBe("expired");
+  });
+
+  it("denies someone who knows a verified subject but not its key", async () => {
+    const { world, gateway } = rig();
+    onChain(gateway, BigInt(gateway.deps.now() + 3600));
+    const r = await knock(gateway, world.subject, bytes(32, 0x5a));
+    expect(r.status).toBe(403);
+    expect(r.body.reason).toBe("ownership_not_proven");
+  });
+
+  it("does not accept a nonce issued by the verification API", async () => {
+    const { world, gateway } = rig();
+    onChain(gateway, BigInt(gateway.deps.now() + 3600));
+    const c = await challenge(gateway, world.subject);
+    const { serverNonce } = (await c.json()) as { serverNonce: string };
+    const r = await knock(gateway, world.subject, world.userSecret, serverNonce);
+    expect(r.status).toBe(403);
+    expect(r.body.reason).toBe("ownership_not_proven");
+  });
+
+  it("rejects malformed requests", async () => {
+    const { gateway } = rig();
+    expect((await accessChallengeRoute(post("challenge", { subject: "zz" }), gateway)).status).toBe(400);
+    expect((await accessChallengeRoute(post("challenge", {}), gateway)).status).toBe(400);
+    expect((await accessCheckRoute(post("check", { subject: "00".repeat(32) }), gateway)).status).toBe(400);
   });
 });

@@ -339,3 +339,72 @@ export async function handleStatus(
   if (validUntil === undefined) return { status: 404, body: { error: "not_found" } };
   return { status: 200, body: { verified: validUntil > BigInt(deps.now()), validUntil: validUntil.toString() } };
 }
+
+// ---- Example relying party -------------------------------------------------
+// How an application consumes a verification: it asks the visitor to prove
+// control of a subject, then reads that subject's status. It never sees a
+// document, a session, or a wallet address.
+
+/** Challenges for the example relying party are recorded under this principal, so they cannot be used at /v1/verify. */
+export const RELYING_PARTY_PRINCIPAL = "relying-party:example";
+
+export interface AccessCheckRequest {
+  subjectHex: string | undefined;
+  ownerKeyHex: string | undefined;
+  serverNonceHex: string | undefined;
+  ownershipSignatureHex: string | undefined;
+  clientIp: string;
+}
+
+/** POST /example/access/challenge: a nonce for the visitor to sign with the key behind the subject. */
+export function handleAccessChallenge(
+  deps: Pick<GatewayDeps, "challenges" | "rateLimiter" | "now">,
+  subjectHex: string | undefined,
+  clientIp: string,
+): GatewayResponse {
+  try {
+    const subject = hexField(subjectHex, 32, "subject");
+    const now = deps.now();
+    if (!deps.rateLimiter.allow([`access-ip:${clientIp}`], now)) return { status: 429, body: { error: "rate_limited" } };
+    const challenge = deps.challenges.issue(RELYING_PARTY_PRINCIPAL, subject, now);
+    return { status: 201, body: { serverNonce: toHex(challenge.serverNonce), expiresAt: challenge.expiresAt } };
+  } catch (e) {
+    if (e instanceof HttpError) return { status: e.status, body: { error: e.code, ...(e.reason ? { reason: e.reason } : {}) } };
+    throw e;
+  }
+}
+
+/**
+ * POST /example/access/check: grants access only if the visitor controls the
+ * subject and finalized, indexed chain state shows it verified and unexpired.
+ */
+export async function handleAccessCheck(
+  deps: Pick<GatewayDeps, "config" | "challenges" | "rateLimiter" | "chain" | "now">,
+  req: AccessCheckRequest,
+): Promise<GatewayResponse> {
+  try {
+    const now = deps.now();
+    if (!deps.rateLimiter.allow([`access-ip:${req.clientIp}`], now)) return { status: 429, body: { error: "rate_limited" } };
+    const proof = {
+      subject: hexField(req.subjectHex, 32, "subject"),
+      ownerKey: pointField(req.ownerKeyHex, "ownerKey"),
+      serverNonce: hexField(req.serverNonceHex, 32, "serverNonce"),
+      signature: decodeSignature(hexField(req.ownershipSignatureHex, 96, "ownershipSignature")),
+    };
+    try {
+      verifySubjectOwnership(deps.challenges, deps.config, RELYING_PARTY_PRINCIPAL, proof, now);
+    } catch (e) {
+      if (!(e instanceof OwnershipError)) throw e;
+      return { status: 403, body: { error: "access_denied", reason: "ownership_not_proven" } };
+    }
+    const validUntil = await deps.chain.verifiedUntil(proof.subject);
+    if (validUntil === undefined) return { status: 403, body: { error: "access_denied", reason: "not_verified" } };
+    if (validUntil <= BigInt(now)) {
+      return { status: 403, body: { error: "access_denied", reason: "expired", validUntil: validUntil.toString() } };
+    }
+    return { status: 200, body: { access: "granted", validUntil: validUntil.toString() } };
+  } catch (e) {
+    if (e instanceof HttpError) return { status: e.status, body: { error: e.code, ...(e.reason ? { reason: e.reason } : {}) } };
+    throw e;
+  }
+}

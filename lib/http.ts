@@ -5,7 +5,14 @@ import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fromHex, toHex } from "./encoding.ts";
-import { handleStatus, handleVerify, type GatewayResponse, type VerifyRequest } from "./gateway.ts";
+import {
+  handleAccessChallenge,
+  handleAccessCheck,
+  handleStatus,
+  handleVerify,
+  type GatewayResponse,
+  type VerifyRequest,
+} from "./gateway.ts";
 import { getGateway, NotConfiguredError, type Gateway } from "./server.ts";
 import { challengeDigest } from "./subject-ownership.ts";
 
@@ -131,6 +138,45 @@ export function verifyRoute(request: Request, gateway?: Gateway): Promise<Respon
 /** GET /v1/status/{subject} */
 export function statusRoute(subjectHex: string, gateway?: Gateway): Promise<Response> {
   return serve("/v1/status", "GET", ({ deps }) => handleStatus(deps, subjectHex), gateway);
+}
+
+/**
+ * POST /example/access/challenge  { "subject": "<64 hex>" }
+ * The example relying party's nonce. Needs no session: a relying party is a separate application.
+ */
+export function accessChallengeRoute(request: Request, gateway?: Gateway): Promise<Response> {
+  return serve(
+    "/example/access/challenge",
+    "POST",
+    async ({ deps }) => {
+      const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+      return handleAccessChallenge(deps, typeof body.subject === "string" ? body.subject : undefined, clientIp(request));
+    },
+    gateway,
+  );
+}
+
+/**
+ * POST /example/access/check  { subject, ownerKey, serverNonce, ownershipSignature } (hex)
+ * Grants access if the visitor controls a subject that is verified on-chain.
+ */
+export function accessCheckRoute(request: Request, gateway?: Gateway): Promise<Response> {
+  return serve(
+    "/example/access/check",
+    "POST",
+    async ({ deps }) => {
+      const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+      const str = (name: string) => (typeof body[name] === "string" ? (body[name] as string) : undefined);
+      return handleAccessCheck(deps, {
+        subjectHex: str("subject"),
+        ownerKeyHex: str("ownerKey"),
+        serverNonceHex: str("serverNonce"),
+        ownershipSignatureHex: str("ownershipSignature"),
+        clientIp: clientIp(request),
+      });
+    },
+    gateway,
+  );
 }
 
 /** GET /v1/session. Tells the client whether its session is valid and at what assurance method. */
