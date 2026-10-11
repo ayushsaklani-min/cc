@@ -11,6 +11,7 @@ const LINKS = [
   { href: "/#how-it-works", label: "How it works" },
   { href: "/#privacy", label: "Privacy" },
   { href: "/#protocols", label: "For protocols" },
+  { href: "/sandbox", label: "Try it" },
 ];
 
 /** A ruled masthead. It hides while reading down and returns on the way up. */

@@ -265,6 +265,7 @@ Choices made where the spec is silent:
 | S-10 | Split hosting: pages-only deployment forwards `/api/*` via `BACKEND_ORIGIN` | The API runs inside the Next.js app. One deployment holds the secrets and serves the API; a second, with no secrets, serves pages and forwards API calls to it. |
 | S-11 | `contracts/managed/` is committed | A hosted build has no Compact compiler. The artifacts are the output of compiler 0.31.1 for the contract in this repository; `npm run compile` regenerates them. |
 | S-12 | Example relying app at `/example` with `POST /api/example/access/{challenge,check}` | Not in the spec. Shows how an application consumes a verification: the visitor signs a challenge with the key behind their subject, and the app reads that subject's on-chain status. No session is required. Its challenges are recorded under a separate principal, so they cannot be replayed at `/v1/verify`, and the reverse. The lookup runs on the same server as the gateway; a real integrator would run it on its own backend or check the status in its own contract. |
+| S-13 | Sandbox at `/sandbox` (`lib/sandbox.ts`) | Not in the spec. Runs the compiled contract in the browser against the on-chain runtime, with throwaway keys, so a reviewer can see the contract accept and refuse without a wallet. It generates no proof and touches no network, and the page says so. |
 
 Also noted, not a code deviation: no KMS or HSM product signs Jubjub Schnorr
 natively. "Private key held in KMS/HSM" (spec 6) will mean an envelope-encrypted

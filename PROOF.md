@@ -62,6 +62,10 @@ deployed contract, using a validly formed transaction that should not succeed.
 | Redeem an attestation issued before a revocation | `Issued before revocation` |
 | Move a revocation epoch backward | `Revocation epoch moved backward` |
 
+You can reproduce the contract refusals yourself, without a wallet, in the
+[sandbox](https://ciphercomply.vercel.app/sandbox), which runs the same compiled
+contract in your browser.
+
 **Limit of this evidence:** every refusal was produced by executing the circuit
 locally against indexed chain state, before submission. That is how Midnight
 transactions are built: a proof that cannot be constructed is never sent. The
@@ -82,9 +86,9 @@ The gateway refuses earlier still, before anything is signed:
 
 ## Tests
 
-- 159 offline tests pass (7 need a live proof server or model and are skipped):
+- 179 offline tests pass (7 need a live proof server or model and are skipped):
   contract simulator, signature golden vectors, policy engine, registry,
-  gateway, HTTP layer and the example relying app.
+  gateway, HTTP layer, the example relying app and the sandbox scenarios.
 - CI runs on every push: clean install, dependency audit, secret scan, compile
   with the pinned compiler, typecheck, tests, and the on-chain evidence check.
 

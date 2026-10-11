@@ -8,6 +8,7 @@ A person proves "my income meets this policy"; an application learns only
 and the name never reach the chain.
 
 - **Live app:** https://ciphercomply.vercel.app
+- **Try to break the contract, no wallet needed:** https://ciphercomply.vercel.app/sandbox
 - **Example of an app using it:** https://ciphercomply.vercel.app/example
 - **Contract on Midnight Preview:** [`f414a418…39b322df`](https://preview.midnightexplorer.com/contracts/f414a418e7f7878e1ac7103954084cd1454fdc201bc6c799e17e0dbb39b322df)
 - **Evidence, with links to every transaction:** [PROOF.md](PROOF.md)
@@ -22,12 +23,14 @@ No wallet, account or secret is needed for any of this.
 ```
 npm ci
 npm run verify:onchain   # 35 checks against the public Midnight indexer
-npm test                 # 159 offline tests
+npm test                 # 179 offline tests
 ```
 
-Then open the [example app](https://ciphercomply.vercel.app/example) to see
-what a relying application looks like, and [PROOF.md](PROOF.md) for the list of
-things the contract refuses to do.
+Or without installing anything, open the
+[sandbox](https://ciphercomply.vercel.app/sandbox): it runs the compiled contract
+in your browser and lets you try eleven attacks against it. Then see the
+[example app](https://ciphercomply.vercel.app/example) for what a relying
+application looks like, and [PROOF.md](PROOF.md) for the on-chain record.
 
 Running a verification yourself needs a Lace wallet on Preview, test funds and
 a proof server; see [Run it locally](#run-it-locally).
@@ -71,6 +74,7 @@ itself. [PRIVACY-BOUNDARY.md](PRIVACY-BOUNDARY.md) has the full boundary.
 | Gateway | `lib/gateway.ts`, `lib/http.ts` | Subject-ownership proof, idempotency, rate limits, one-use document registry. |
 | Web app | `frontend/` | Next.js. Lace wallet flow, verification history, privacy disclosure. |
 | Example relying app | `frontend/src/app/example` | Unlocks only for the holder of a verified subject. |
+| Sandbox | `lib/sandbox.ts`, `frontend/src/app/sandbox` | The compiled contract running in the browser, with 14 scripted scenarios. No proofs, no network. |
 | Evidence | `scripts/verify-onchain.ts`, `evidence/` | Re-checks recorded transactions and ledger state. |
 
 ## Run it locally
