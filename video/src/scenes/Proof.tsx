@@ -11,7 +11,8 @@ const k = (x: number) => Math.round(x * D);
  * Identifiers are shortened, not altered. `at` follows the narration.
  */
 const EVIDENCE = [
-  { label: "CONTRACT DEPLOYED", value: "f414a418…39b322df", note: "BLOCK 1221482", at: 0.16 },
+  { label: "INCOME CONTRACT", value: "f414a418…39b322df", note: "BLOCK 1221482", at: 0.14 },
+  { label: "OVER-18 CONTRACT", value: "f83caf8a…65cca9dc", note: "BLOCK 1250246", at: 0.22 },
   { label: "ATTESTATION SETTLED", value: "tx 007900e4…9113c22d", note: "BLOCK 1225891", at: 0.36 },
   { label: "REVOCATION SETTLED", value: "tx 007ffae0…18172634", note: "BLOCK 1225895", at: 0.47 },
   { label: "END-TO-END RUN", value: "23 of 23 cases passed", note: "CLI WALLET", at: 0.62 },
@@ -39,7 +40,7 @@ export const Proof: React.FC = () => {
             opacity: interpolate(frame, [14, 38], [0, 1], { ...clamp, easing: OUT }),
           }}
         >
-          § 05 — RUNNING ON MIDNIGHT PREVIEW
+          § 06 — RUNNING ON MIDNIGHT PREVIEW
         </Interactive.Div>
 
         <Words
@@ -57,7 +58,7 @@ export const Proof: React.FC = () => {
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  padding: "25px 0",
+                  padding: "20px 0",
                   borderBottom: `1px solid ${ON_INK_LINE}`,
                   opacity: interpolate(frame, [at, at + 20], [0, 1], { ...clamp, easing: OUT }),
                   translate: interpolate(frame, [at, at + 24], ["-30px 0px", "0px 0px"], { ...clamp, easing: OUT }),

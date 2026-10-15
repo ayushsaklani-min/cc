@@ -19,6 +19,7 @@ const OFF_CHAIN = [
   { name: "POLICY ENGINE", at: 0.7 },
   { name: "GATEWAY API", at: 0.78 },
   { name: "LACE WALLET FLOW", at: 0.86 },
+  { name: "SIGNED-DOCUMENT CHECK", at: 0.9 },
 ];
 
 const Column: React.FC<{ title: string; items: { name: string; at: number }[]; filled: boolean; frame: number }> = ({ title, items, filled, frame }) => (
@@ -78,7 +79,7 @@ export const Stack: React.FC = () => {
             opacity: interpolate(frame, [14, 38], [0, 1], { ...clamp, easing: OUT }),
           }}
         >
-          § 04 — WHAT IS BUILT
+          § 05 — WHAT IS BUILT
         </Interactive.Div>
 
         <Words

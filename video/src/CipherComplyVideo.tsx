@@ -8,6 +8,7 @@ import { Intro } from "./scenes/Intro";
 import { Ledger } from "./scenes/Ledger";
 import { Outro } from "./scenes/Outro";
 import { Proof } from "./scenes/Proof";
+import { Signed } from "./scenes/Signed";
 import { Protocols } from "./scenes/Protocols";
 import { Solution } from "./scenes/Solution";
 import { Stack } from "./scenes/Stack";
@@ -19,6 +20,7 @@ export const SCENES = [
   { id: "Solution", component: Solution, durationInFrames: DUR.solution, dark: false, wipe: "right" },
   { id: "HowItWorks", component: HowItWorks, durationInFrames: HOW_IT_WORKS, dark: false, wipe: "up" },
   { id: "Ledger", component: Ledger, durationInFrames: DUR.ledger, dark: true, wipe: "right" },
+  { id: "Signed", component: Signed, durationInFrames: DUR.signed, dark: false, wipe: "left" },
   { id: "Stack", component: Stack, durationInFrames: DUR.stack, dark: false, wipe: "down" },
   { id: "Proof", component: Proof, durationInFrames: DUR.proof, dark: true, wipe: "right" },
   { id: "Protocols", component: Protocols, durationInFrames: DUR.protocols, dark: false, wipe: "left" },

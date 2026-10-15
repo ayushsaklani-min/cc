@@ -53,7 +53,7 @@ export const Outro: React.FC = () => {
               opacity: interpolate(frame, [210, 236], [0, 1], { ...clamp, easing: OUT }),
             }}
           >
-            RUNNING ON MIDNIGHT PREVIEW — NEXT: INDEPENDENT AUDIT, PRODUCTION KEY CUSTODY
+            TRY IT: CIPHERCOMPLY.VERCEL.APP/SANDBOX — RUNNING ON MIDNIGHT PREVIEW
           </Interactive.Div>
         </AbsoluteFill>
       </Camera>

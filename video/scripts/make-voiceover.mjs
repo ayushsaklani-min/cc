@@ -18,8 +18,9 @@ const FILM_LINES = [
   { id: "step3", text: "A zero-knowledge proof is generated, and the contract checks the oracle's signature inside the circuit." },
   { id: "step4", text: "The transaction settles on Midnight, and the status becomes queryable." },
   { id: "ledger", text: "On the ledger: a pseudonymous identifier, a validity date, and a one-time marker. Never on the ledger: your document, your income, or your name." },
+  { id: "signed", text: "For the over-eighteen policy, there is no AI at all. The document must carry DigiLocker's digital signature. Change a single byte, and it is refused. And one person's record can verify only one identity." },
   { id: "stack", text: "Under the hood: a Compact contract with in-circuit signature verification, block-time expiry, nullifiers, and revocation. Around it: an oracle signer, a policy engine, a gateway, and a wallet flow for Lace." },
-  { id: "proof", text: "And it runs today. The contract is deployed on Midnight Preview. An attestation and a revocation have settled on-chain. And the full flow has been completed in the browser, with a Lace wallet." },
+  { id: "proof", text: "And it runs today. Two contracts are deployed on Midnight Preview. Attestations and a revocation have settled on-chain. And the full flow has been completed in the browser, with a Lace wallet." },
   { id: "protocols", text: "Protocols simply check a status. Not a document." },
   { id: "outro", text: "CipherComply. A working implementation of private financial verification, on Midnight." },
 ];

@@ -24,7 +24,7 @@ export const Protocols: React.FC = () => {
             opacity: interpolate(frame, [14, 38], [0, 1], { ...clamp, easing: OUT }),
           }}
         >
-          § 06 — FOR PROTOCOLS
+          § 07 — FOR PROTOCOLS
         </Interactive.Div>
 
         <div style={{ position: "absolute", left: 150, top: 250, fontFamily: DISPLAY, fontSize: 138, lineHeight: 1.04, letterSpacing: "-0.035em", color: INK }}>
