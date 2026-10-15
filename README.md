@@ -16,6 +16,10 @@ and the name never reach the chain.
 Status: development preview on the Preview test network. Not audited. See
 [Known limits](#known-limits).
 
+[![ci](https://github.com/ayushsaklani-min/cc/actions/workflows/ci.yml/badge.svg)](https://github.com/ayushsaklani-min/cc/actions/workflows/ci.yml)
+
+What changed in each buildathon wave: [WAVES.md](WAVES.md).
+
 ## Evaluate it in five minutes
 
 No wallet, account or secret is needed for any of this.
@@ -135,3 +139,7 @@ Every deviation from the specification is listed in
 [SPIKE-REPORT.md](SPIKE-REPORT.md). Threats and open gaps are in
 [THREAT-MODEL.md](THREAT-MODEL.md) and [SECURITY.md](SECURITY.md). The original
 specification is in `docs/spec/`.
+
+## Licence
+
+Apache License 2.0. See [LICENSE](LICENSE).
