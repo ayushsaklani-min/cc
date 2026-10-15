@@ -9,7 +9,7 @@
 - An app that uses a verification: https://ciphercomply.vercel.app/example
 - Source (Apache-2.0): https://github.com/ayushsaklani-min/cc
 - On-chain evidence, re-checkable by anyone: [PROOF.md](PROOF.md)
-- Video: *link to be added*
+- Video (3 min, product film and a real run): https://youtu.be/QPNuGXtu6nM
 
 ## What it is
 

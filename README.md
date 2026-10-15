@@ -8,6 +8,7 @@ A person proves "my income meets this policy"; an application learns only
 and the name never reach the chain.
 
 - **Live app:** https://ciphercomply.vercel.app
+- **Video, 3 minutes:** https://youtu.be/QPNuGXtu6nM
 - **Try to break the contract, no wallet needed:** https://ciphercomply.vercel.app/sandbox
 - **Example of an app using it:** https://ciphercomply.vercel.app/example
 - **Contract on Midnight Preview:** [`f414a418…39b322df`](https://preview.midnightexplorer.com/contracts/f414a418e7f7878e1ac7103954084cd1454fdc201bc6c799e17e0dbb39b322df)
