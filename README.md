@@ -56,6 +56,18 @@ A relying application then asks one question: is this subject verified? It can
 ask the status API, or have the visitor prove control of the subject first, as
 the example app does.
 
+## Trust model
+
+**One checker sees your document, once. Apps and the chain never do.**
+Zero-knowledge proofs cannot read a document, so the CipherComply service checks
+it first. Apps that rely on a verification get a yes or no for a pseudonymous
+identifier, and the ledger holds no personal data. This is not zero trust: the
+user trusts the checker. For the over-18 policy that checker uses no AI and
+accepts only issuer-signed evidence; for the income policy an AI provider also
+reads the document. The hosted demo uses Gemini's free tier, under which Google
+may use submitted content to improve its products and human reviewers may read
+it, so use the sample documents there.
+
 ## Two policies, two kinds of evidence
 
 | Policy | Evidence | How it is checked | Contract |

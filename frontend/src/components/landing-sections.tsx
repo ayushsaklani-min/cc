@@ -271,20 +271,19 @@ export function Process() {
 /* ---------- The privacy boundary: a disclosure schedule on the dark zone ---------- */
 
 type Mark = "yes" | "no";
-const SCHEDULE: { item: string; note?: string; service: Mark; ledger: Mark; you: Mark }[] = [
-  { item: "Your document", service: "yes", ledger: "no", you: "yes" },
-  { item: "The figures read from it", service: "yes", ledger: "no", you: "yes" },
-  { item: "Your verified name", note: "If you signed in with an identity check", service: "yes", ledger: "no", you: "yes" },
-  { item: "A pseudonymous identifier", note: "Persistent, so activity under it can be linked", service: "yes", ledger: "yes", you: "yes" },
-  { item: "How long the verification is valid", service: "yes", ledger: "yes", you: "yes" },
-  { item: "A one-time marker per attestation", service: "yes", ledger: "yes", you: "yes" },
-  { item: "Roughly when it was issued", service: "yes", ledger: "yes", you: "yes" },
-  { item: "The secret key behind your identifier", note: "Created in your browser, never sent", service: "no", ledger: "no", you: "yes" },
+const SCHEDULE: { item: string; note?: string; service: Mark; apps: Mark; ledger: Mark; you: Mark }[] = [
+  { item: "Your document", service: "yes", apps: "no", ledger: "no", you: "yes" },
+  { item: "What it says: income, date of birth, name", service: "yes", apps: "no", ledger: "no", you: "yes" },
+  { item: "Your wallet address", note: "Pays the fee, but is not recorded as the verified party", service: "no", apps: "no", ledger: "no", you: "yes" },
+  { item: "A pseudonymous identifier", note: "Persistent, so activity under it can be linked", service: "yes", apps: "yes", ledger: "yes", you: "yes" },
+  { item: "Whether you are verified, and until when", service: "yes", apps: "yes", ledger: "yes", you: "yes" },
+  { item: "A one-time marker per attestation", service: "yes", apps: "no", ledger: "yes", you: "yes" },
+  { item: "The secret key behind your identifier", note: "Created in your browser, never sent", service: "no", apps: "no", ledger: "no", you: "yes" },
 ];
 
 function Cell({ mark, label }: { mark: Mark; label: string }) {
   return (
-    <td className="w-[16%] py-5 text-center align-middle">
+    <td className="w-[13%] py-5 text-center align-middle">
       {mark === "yes" ? (
         <span className="mx-auto flex size-6 items-center justify-center bg-on-ink text-ink">
           <Check className="size-3.5" strokeWidth={2.5} aria-hidden />
@@ -307,16 +306,16 @@ export function Boundary() {
               The privacy boundary
             </SectionLabel>
             <h2 className={`${H2} mt-7`}>
-              What this proves,
+              One checker sees it, once.
               <br />
-              <em className="text-on-ink-muted">and what it does not.</em>
+              <em className="text-on-ink-muted">Apps and the chain never do.</em>
             </h2>
           </Reveal>
           <Reveal from="right" delay={0.1} className="lg:col-span-4 lg:col-start-9">
             <p className="text-[17px] leading-relaxed text-on-ink-muted">
-              The proof checks that an authorized attestation exists for you and meets the policy&apos;s constraints. It does not
-              independently prove that the original document is genuine, or that it was read correctly. That part still rests on
-              the service that reads the document.
+              Zero-knowledge proofs cannot read a document, so something has to check it first. Here that is the CipherComply
+              service, once. Every app that needs to know you qualify gets a yes or no instead of your file. For the over-18 policy
+              the check uses no AI: the issuer&apos;s digital signature is verified and the record is read by fixed rules.
             </p>
           </Reveal>
         </div>
@@ -334,6 +333,9 @@ export function Boundary() {
                     The service
                   </th>
                   <th scope="col" className="annot pb-4 text-center font-normal">
+                    Apps that check you
+                  </th>
+                  <th scope="col" className="annot pb-4 text-center font-normal">
                     Public ledger
                   </th>
                   <th scope="col" className="annot pb-4 text-center font-normal">
@@ -349,6 +351,7 @@ export function Boundary() {
                       {row.note && <span className="mt-1 block text-[14px] text-on-ink-muted">{row.note}</span>}
                     </th>
                     <Cell mark={row.service} label="The service" />
+                    <Cell mark={row.apps} label="Apps that check you" />
                     <Cell mark={row.ledger} label="Public ledger" />
                     <Cell mark={row.you} label="You" />
                   </tr>
@@ -357,8 +360,8 @@ export function Boundary() {
             </table>
           </div>
           <p className="annot mt-6 max-w-2xl leading-relaxed text-on-ink-muted">
-            The service means the application server and its configured AI provider. Ledger entries are permanent and readable by
-            anyone.
+            The service means the CipherComply server and, for the income policy only, the AI provider that reads the document. An
+            app can also read anything on the public ledger. Ledger entries are permanent and readable by anyone.
           </p>
         </Reveal>
       </div>
@@ -456,8 +459,12 @@ const QUESTIONS = [
     a: "No. This is a development build running against a Midnight test network. The contract has not had an independent security audit, and sign-in is a development stand-in.",
   },
   {
+    q: "If the server sees my document, what is the benefit?",
+    a: "Without it, proving one fact to five apps means sending your document to all five, and each keeps a copy. Here one checker sees it once and keeps only a keyed fingerprint. The apps and the public ledger get a yes or no for an identifier that is not your name or your wallet, and you can reuse that result without uploading again. It is not zero trust: you trust the checker. Moving that check into signed data sources and a sealed enclave is the next step.",
+  },
+  {
     q: "Does zero-knowledge prove my document is authentic?",
-    a: "No. It proves that a valid, unexpired, unused attestation from the authorized service exists for you. Whether the document was genuine and read correctly depends on that service.",
+    a: "Not by itself. It proves that a valid, unexpired, unused attestation from the authorized service exists for you. For the over-18 policy, authenticity comes from the issuer: a record whose DigiLocker signature does not verify is refused. For the income policy, it depends on the service reading the document correctly.",
   },
   {
     q: "Is it anonymous?",
@@ -465,7 +472,7 @@ const QUESTIONS = [
   },
   {
     q: "Who can see my document?",
-    a: "The application server and the AI provider it is configured with. You are shown which provider and model before you upload anything, and must acknowledge it.",
+    a: "The CipherComply server, and for the income policy also the AI provider it uses. You are shown which provider, which model, and what that provider may do with the document before you upload anything, and must acknowledge it. The over-18 policy sends nothing to an AI provider.",
   },
 ];
 

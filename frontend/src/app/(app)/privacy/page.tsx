@@ -37,6 +37,13 @@ export default function PrivacySettings() {
           <Row label="Independent second reading">
             {processing.crossCheckModel ? <span className="font-mono text-[13px]">{processing.crossCheckModel}</span> : "Not used"}
           </Row>
+          <Row label="AI provider's use of documents">
+            {processing.providerDataUse === "unpaid"
+              ? "Free tier: may be used to improve the provider's products; human reviewers may read it"
+              : processing.providerDataUse === "paid"
+                ? "Paid account: not used to improve the provider's products"
+                : "No AI provider"}
+          </Row>
           <Row label="Attestation lifetime">{formatDuration(config.attestationTtlSeconds)}</Row>
           <Row label="Verification validity once confirmed">{formatDuration(config.statusTtlSeconds)}</Row>
           <Row label="Retention period">Not defined yet</Row>

@@ -32,6 +32,17 @@ is **not** off the server or off the AI provider. Only a TEE-backed or
 on-device mode removes that exposure; neither is built. End-to-end encryption
 combined with server-side AI is contradictory and is not offered.
 
+## The AI provider's terms
+
+The income policy sends the document to the Gemini API. Under Google's
+additional terms for the Gemini API, content sent through unpaid (free-tier)
+services may be used to improve Google's products and may be read by human
+reviewers; content sent through paid services is not used for that. The hosted
+demo uses a free-tier key. The deployment reports its tier in its public config
+(`processing.providerDataUse`, set by `GEMINI_DATA_USE`), and the disclosure
+shown before upload says what it means. Anything other than an explicit "paid"
+is described as the free tier.
+
 ## Storage and logs
 
 - The document registry stores an HMAC of the document under a server-only key,

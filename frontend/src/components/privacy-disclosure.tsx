@@ -7,7 +7,7 @@ import type { PublicConfig } from "@/lib/api";
 import { formatDuration } from "@/lib/copy";
 
 export const disclosureVersion = (c: PublicConfig) =>
-  ["v2", c.policy.id, c.processing.mode, c.processing.extractionProvider ?? "-", c.processing.extractionModel ?? "-", c.processing.crossCheckModel ?? "-", c.network].join("|");
+  ["v3", c.policy.id, c.processing.providerDataUse ?? "-", c.processing.mode, c.processing.extractionProvider ?? "-", c.processing.extractionModel ?? "-", c.processing.crossCheckModel ?? "-", c.network].join("|");
 
 export function PrivacyDisclosure({ config }: { config: PublicConfig }) {
   const { processing, policy } = config;
@@ -26,6 +26,17 @@ export function PrivacyDisclosure({ config }: { config: PublicConfig }) {
         ) to read the figures from it. Both the server and the AI provider can see the document in full. This is the only
         processing mode this deployment offers.
       </Item>
+      {processing.providerDataUse === "unpaid" ? (
+        <Item title="What the AI provider may do with it">
+          This deployment uses the free tier of {processing.extractionProvider}. Under its terms, Google may use what it is sent to
+          improve its products, and human reviewers may read it. Use the sample documents, not a real one.
+        </Item>
+      ) : processing.providerDataUse === "paid" ? (
+        <Item title="What the AI provider may do with it">
+          This deployment uses a paid {processing.extractionProvider} account. Under its terms, Google does not use what it is sent
+          to improve its products, and keeps it for a limited time only to detect misuse.
+        </Item>
+      ) : null}
       <Item title="What decides the result">
         The AI reads the document; fixed policy rules then decide eligibility. A zero-knowledge proof later checks that a valid
         attestation exists for you. It does not prove the document is genuine or that it was read correctly.

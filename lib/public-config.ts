@@ -40,6 +40,13 @@ export interface PublicConfig {
     extractionProvider: string | null;
     extractionModel: string | null;
     crossCheckModel: string | null;
+    /**
+     * How the AI provider may use what it is sent, under the account tier this
+     * deployment uses. "unpaid": the provider may use it to improve its products
+     * and human reviewers may read it. "paid": it is not used for that. Null when
+     * no provider is involved.
+     */
+    providerDataUse: "unpaid" | "paid" | null;
   };
   attestationTtlSeconds: number;
   statusTtlSeconds: number;

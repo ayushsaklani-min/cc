@@ -24,6 +24,18 @@ validity date. An app asks one question, *is this identifier verified?*, and
 never sees the document, the income, the date of birth, the name or the wallet
 address.
 
+## The trust model, in one line
+
+**One checker sees your document, once. Apps and the chain never do.**
+
+Zero-knowledge proofs cannot read a PDF, so something must check the document
+before anything can be proven. In CipherComply that checker is the service,
+once. Without it, proving one fact to five apps means five copies of your
+document in five databases. With it, each app gets a yes or no for an
+identifier that is not your name or your wallet, and you reuse that result
+without uploading again. It is not zero trust, and we say so: the user trusts
+the checker. The roadmap below is about shrinking that trust.
+
 ## How privacy shapes the design
 
 - **Nothing personal reaches the ledger.** Only a contract-scoped pseudonymous
@@ -42,14 +54,18 @@ address.
 
 ## Two policies, two kinds of evidence
 
-| Policy | Evidence | How it is checked |
-|---|---|---|
-| Annual income of at least USD 85,000 | Payslip, tax return or employer letter | Read by a model, cross-checked by a second model, decided by fixed rules |
-| Aged 18 or over | DigiLocker's PAN Verification Record | Issuer's digital signature verified against a pinned certificate, then read by rule. No AI. |
+| Policy | Evidence | How it is checked | Who sees the document |
+|---|---|---|---|
+| **Aged 18 or over** | DigiLocker's PAN Verification Record | Issuer's digital signature verified against a pinned certificate, then read by rule. No AI. | The CipherComply server only |
+| Annual income of at least USD 85,000 | Payslip, tax return or employer letter | Read by a model, cross-checked by a second model, decided by fixed rules | The server and Google's Gemini API |
 
-The second policy removes the first one's main weakness: a document whose
-signature does not verify is refused, so an edited PDF cannot pass, and one
-person's record can verify only one identity.
+The over-18 policy is the design we are moving towards: a document whose
+signature does not verify is refused, so an edited PDF cannot pass, no AI
+provider sees it, and one person's record can verify only one identity. The
+income policy keeps the original design. The hosted demo uses Gemini's free
+tier, under which Google may use submitted content to improve its products and
+human reviewers may read it; the disclosure says so before upload, and the
+demo asks for sample documents only.
 
 ## Current state, with evidence
 
@@ -87,6 +103,14 @@ See [WAVES.md](WAVES.md).
 
 ## Next
 
-A written self-audit, oracle key rotation exercised on-chain, a way for a
-reviewer to complete a real verification without running a proof server, and a
-first integration partner.
+Shrinking what the checker must be trusted with:
+1. **Signed sources instead of AI** for income, as the over-18 policy already
+   does for age. In India, consent-based financial data from banks is one
+   candidate we have not yet evaluated.
+2. **A sealed checker:** run the verification in a confidential-computing
+   enclave, so that even the operator cannot see the document and anyone can
+   check which code ran.
+
+And for the next wave: a written self-audit, oracle key rotation exercised
+on-chain, a way for a reviewer to complete a real verification without running
+a proof server, and a first integration partner.

@@ -230,12 +230,14 @@ function build(requestedPolicyId: string): Gateway {
     upload: { maxBytes: deps.config.maxDocumentBytes, mimeTypes: signedAge ? ["application/pdf"] : ACCEPTED_MIME_TYPES },
     // A signed record is checked and read by rule on this server; no model sees it.
     processing: signedAge
-      ? { mode: "server-mediated", extractionProvider: null, extractionModel: null, crossCheckModel: null }
+      ? { mode: "server-mediated", extractionProvider: null, extractionModel: null, crossCheckModel: null, providerDataUse: null }
       : {
           mode: "server-mediated",
           extractionProvider: "Google Gemini API",
           extractionModel: env("GEMINI_MODEL"),
           crossCheckModel: policy.crossCheckToleranceBps !== undefined ? env("GEMINI_CROSSCHECK_MODEL") : null,
+          // Only a deployment that has declared a paid account is described as one.
+          providerDataUse: process.env.GEMINI_DATA_USE === "paid" ? "paid" : "unpaid",
         },
     attestationTtlSeconds: deps.config.attestationTtl,
     statusTtlSeconds: deps.config.statusTtl,

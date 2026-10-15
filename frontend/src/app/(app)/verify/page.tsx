@@ -141,7 +141,7 @@ export default function VerifyPage() {
           />
           <span className="text-[15px]">
             {config.processing.extractionProvider
-              ? `I understand that my document will be sent to this server and to ${config.processing.extractionProvider}, and what becomes public if I confirm on-chain.`
+              ? `I understand that my document will be sent to this server and to ${config.processing.extractionProvider}${config.processing.providerDataUse === "unpaid" ? ", which may use it to improve its products and let human reviewers read it" : ""}, and what becomes public if I confirm on-chain.`
               : "I understand that my document will be sent to this server, which can read it in full, and what becomes public if I confirm on-chain."}
           </span>
         </label>
