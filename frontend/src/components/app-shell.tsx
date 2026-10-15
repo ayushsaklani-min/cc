@@ -23,6 +23,7 @@ const NAV = [
 export function NetworkChip() {
   const { service } = useService();
   if (service.kind === "loading") return <StatusBadge tone="progress">Checking service</StatusBadge>;
+  if (service.kind === "starting") return <StatusBadge tone="progress">Starting service</StatusBadge>;
   if (service.kind === "unreachable") return <StatusBadge tone="error">Service unreachable</StatusBadge>;
   if (service.kind === "not_configured") return <StatusBadge tone="warning">Not configured</StatusBadge>;
   return (
@@ -130,6 +131,17 @@ function Gate({ children }: { children: ReactNode }) {
       <p role="status" className="text-muted">
         Loading…
       </p>
+    );
+  }
+  if (service.kind === "starting") {
+    return (
+      <div role="status" className="max-w-xl space-y-2">
+        <p className="font-semibold">Starting the verification service…</p>
+        <p className="text-[15px] text-muted">
+          This demo runs on a free server that sleeps when nobody is using it. Waking it can take up to a minute. Nothing has been
+          submitted.
+        </p>
+      </div>
     );
   }
   if (service.kind === "unreachable") {

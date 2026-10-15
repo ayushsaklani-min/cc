@@ -6,7 +6,15 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import { fetchConfig, fetchSession, type ConfigResult, type SessionInfo } from "@/lib/api";
 import { setSelectedPolicy, useSelectedPolicy, useSessionToken } from "@/lib/store";
 
-export type ServiceState = { kind: "loading" } | Exclude<ConfigResult, { kind: "unknown_policy" }>;
+export type ServiceState =
+  | { kind: "loading" }
+  /** The server did not answer yet; it may be waking from sleep. Still retrying. */
+  | { kind: "starting" }
+  | Exclude<ConfigResult, { kind: "unknown_policy" }>;
+
+/** How long to keep retrying a server that does not answer, and how often. */
+const WAKE_TIMEOUT_MS = 120_000;
+const WAKE_RETRY_MS = 4_000;
 export type SessionState =
   | { kind: "loading" }
   | { kind: "signed_out" }
@@ -22,15 +30,26 @@ export function ServiceProvider({ children }: { children: ReactNode }) {
   const [generation, setGeneration] = useState(0);
   const token = useSessionToken();
   const policy = useSelectedPolicy();
+  const ready = service.kind === "ready";
 
   useEffect(() => {
     let live = true;
-    void fetchConfig().then((r) => {
+    const started = Date.now();
+    // The hosted backend sleeps when idle and takes up to a minute to wake, so an
+    // unanswered request is retried for a while before the page reports a failure.
+    const attempt = async () => {
+      const r = await fetchConfig();
       if (!live) return;
+      if (r.kind === "unreachable" && Date.now() - started < WAKE_TIMEOUT_MS) {
+        setService({ kind: "starting" });
+        setTimeout(() => void attempt(), WAKE_RETRY_MS);
+        return;
+      }
       // A policy remembered from another deployment: drop it and load the default.
       if (r.kind === "unknown_policy") setSelectedPolicy(null);
       else setService(r);
-    });
+    };
+    void attempt();
     return () => {
       live = false;
     };
@@ -50,7 +69,8 @@ export function ServiceProvider({ children }: { children: ReactNode }) {
     return () => {
       live = false;
     };
-  }, [token, generation]);
+  // Asked again once the service is up, in case the first try met a sleeping server.
+  }, [token, generation, ready]);
 
   const reload = useCallback(() => setGeneration((g) => g + 1), []);
   return <ServiceContext.Provider value={{ service, session, reload }}>{children}</ServiceContext.Provider>;

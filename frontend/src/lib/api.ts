@@ -26,7 +26,9 @@ export type ConfigResult =
 
 export async function fetchConfig(): Promise<ConfigResult> {
   try {
-    const r = await fetch(scoped("/api/v1/config"), { cache: "no-store" });
+    // Give up on a single attempt quickly, so the page can say the server is starting
+    // rather than sit silent; the caller retries while it wakes.
+    const r = await fetch(scoped("/api/v1/config"), { cache: "no-store", signal: AbortSignal.timeout(15_000) });
     if (r.status === 200) return { kind: "ready", config: (await r.json()) as PublicConfig };
     if (r.status === 400) return { kind: "unknown_policy" };
     if (r.status === 503) return { kind: "not_configured" };

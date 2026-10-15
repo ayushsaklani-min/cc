@@ -152,7 +152,11 @@ export default function ExampleRelyingApp() {
             </ol>
 
             <div className="mt-8 space-y-4" aria-live="polite">
-              {service.kind === "not_configured" || service.kind === "unreachable" ? (
+              {service.kind === "starting" ? (
+                <p role="status" className="text-[15px] text-muted">
+                  Starting the verification service. It sleeps when idle and can take up to a minute to wake.
+                </p>
+              ) : service.kind === "not_configured" || service.kind === "unreachable" ? (
                 <Notice tone="error" title="The verification service is not available">
                   <p>This example needs the CipherComply service to be running and configured.</p>
                 </Notice>
