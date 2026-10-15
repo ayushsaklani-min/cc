@@ -17,3 +17,8 @@ midnight-level-db/
 samples/
 
 .vercel
+
+# Local-only working documents (original briefs)
+docs/local/
+# Instructions for coding agents, not part of the product
+frontend/AGENTS.md

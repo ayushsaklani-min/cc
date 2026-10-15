@@ -8,7 +8,7 @@
 - Try to break the contract, no wallet needed: https://ciphercomply.vercel.app/sandbox
 - An app that uses a verification: https://ciphercomply.vercel.app/example
 - Source (Apache-2.0): https://github.com/ayushsaklani-min/cc
-- On-chain evidence, re-checkable by anyone: [PROOF.md](PROOF.md)
+- On-chain evidence, re-checkable by anyone: [proof.md](proof.md)
 - Video (3 min, product film and a real run): https://youtu.be/QPNuGXtu6nM
 
 ## What it is
@@ -50,7 +50,7 @@ the checker. The roadmap below is about shrinking that trust.
   control of the subject first, as the example app does.
 - **The privacy boundary is stated honestly:** the service reads the document
   to check it. It is private from the chain and from relying apps, not from
-  CipherComply itself. See `PRIVACY-BOUNDARY.md`.
+  CipherComply itself. See `privacy-boundary.md`.
 
 ## Two policies, two kinds of evidence
 
@@ -95,11 +95,11 @@ Development sign-in and an oracle key held in memory; a signed record proves the
 document, not that the uploader is the person in it; issuer trust is a pinned
 certificate; a local proof server is needed to submit from the browser; no
 independent audit; no users or partners yet. All of these are written down in
-`README.md`, `THREAT-MODEL.md` and `SPIKE-REPORT.md`.
+`../README.md`, `threat-model.md` and `spike-report.md`.
 
 ## What changed in this wave
 
-See [WAVES.md](WAVES.md).
+See [waves.md](waves.md).
 
 ## Next
 

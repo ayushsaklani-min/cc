@@ -12,14 +12,14 @@ and the name never reach the chain.
 - **Try to break the contract, no wallet needed:** https://ciphercomply.vercel.app/sandbox
 - **Example of an app using it:** https://ciphercomply.vercel.app/example
 - **Contract on Midnight Preview:** [`f414a418…39b322df`](https://preview.midnightexplorer.com/contracts/f414a418e7f7878e1ac7103954084cd1454fdc201bc6c799e17e0dbb39b322df)
-- **Evidence, with links to every transaction:** [PROOF.md](PROOF.md)
+- **Evidence, with links to every transaction:** [proof.md](docs/proof.md)
 
 Status: development preview on the Preview test network. Not audited. See
 [Known limits](#known-limits).
 
 [![ci](https://github.com/ayushsaklani-min/cc/actions/workflows/ci.yml/badge.svg)](https://github.com/ayushsaklani-min/cc/actions/workflows/ci.yml)
 
-What changed in each buildathon wave: [WAVES.md](WAVES.md).
+What changed in each buildathon wave: [waves.md](docs/waves.md).
 
 ## Evaluate it in five minutes
 
@@ -35,7 +35,7 @@ Or without installing anything, open the
 [sandbox](https://ciphercomply.vercel.app/sandbox): it runs the compiled contract
 in your browser and lets you try eleven attacks against it. Then see the
 [example app](https://ciphercomply.vercel.app/example) for what a relying
-application looks like, and [PROOF.md](PROOF.md) for the on-chain record.
+application looks like, and [proof.md](docs/proof.md) for the on-chain record.
 
 Running a verification yourself needs a Lace wallet on Preview, test funds and
 a proof server; see [Run it locally](#run-it-locally).
@@ -90,7 +90,7 @@ only one subject.
 
 The service does read the document in order to check it. Privacy here means
 private from the chain and from relying applications, not from CipherComply
-itself. [PRIVACY-BOUNDARY.md](PRIVACY-BOUNDARY.md) has the full boundary.
+itself. [privacy-boundary.md](docs/privacy-boundary.md) has the full boundary.
 
 ## What is built
 
@@ -149,9 +149,36 @@ passes and several that are refused for different reasons.
 - **Not audited,** and key rotation has not been exercised on-chain.
 
 Every deviation from the specification is listed in
-[SPIKE-REPORT.md](SPIKE-REPORT.md). Threats and open gaps are in
-[THREAT-MODEL.md](THREAT-MODEL.md) and [SECURITY.md](SECURITY.md). The original
-specification is in `docs/spec/`.
+[spike-report.md](docs/spike-report.md). Threats and open gaps are in
+[threat-model.md](docs/threat-model.md) and [SECURITY.md](SECURITY.md). The original
+specification is `docs/specification-v5.pdf`.
+
+## Repository layout
+
+| Path | What it is |
+|---|---|
+| `contracts/` | The Compact contract, and its compiled output so a build needs no compiler |
+| `lib/` | Gateway, policies, oracle signer, signed-document check, Midnight integration |
+| `frontend/` | The Next.js web app, including the sandbox and the example relying app |
+| `scripts/` | Compile, deploy, end-to-end runs, sample documents, on-chain evidence check |
+| `test/` | Offline tests and signed test fixtures (invented data) |
+| `evidence/` | Recorded on-chain facts that `npm run verify:onchain` re-checks |
+| `trust/` | Pinned certificates of document issuers |
+| `video/` | Source of the product film (Remotion) |
+| `docs/` | Everything below |
+
+## Documentation
+
+| Document | Read it for |
+|---|---|
+| [docs/proof.md](docs/proof.md) | Every transaction, contract and refusal, with explorer links |
+| [docs/waves.md](docs/waves.md) | What changed in each buildathon wave |
+| [docs/submission.md](docs/submission.md) | The buildathon submission text |
+| [docs/privacy-boundary.md](docs/privacy-boundary.md) | Exactly who sees which data |
+| [docs/threat-model.md](docs/threat-model.md) | Trust assumptions, threats and open gaps |
+| [docs/spike-report.md](docs/spike-report.md) | Every deviation from the specification, with its reason and evidence |
+| [docs/specification-v5.pdf](docs/specification-v5.pdf) | The original specification |
+| [SECURITY.md](SECURITY.md) | Security status and how to report a problem |
 
 ## Licence
 

@@ -148,7 +148,7 @@ export default function SandboxPage() {
             <li>The oracle, admin and user keys are throwaway keys created in this tab. Nothing is uploaded and no document is read.</li>
             <li>
               For the real thing, with proofs and settled transactions, see the{" "}
-              <a className="underline underline-offset-4" href="https://github.com/ayushsaklani-min/cc/blob/phase-0-validation/PROOF.md">
+              <a className="underline underline-offset-4" href="https://github.com/ayushsaklani-min/cc/blob/phase-0-validation/docs/proof.md">
                 on-chain evidence
               </a>
               .

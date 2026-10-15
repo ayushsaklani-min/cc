@@ -9,7 +9,7 @@ on the public Midnight Preview network.
 ### Starting point
 
 A frozen specification for private eligibility attestations on Midnight
-(`docs/spec/`), and no code.
+(`docs/specification-v5.pdf`), and no code.
 
 ### What was built
 
@@ -17,7 +17,7 @@ A frozen specification for private eligibility attestations on Midnight
 - Compact contract (`contracts/ciphercomply.schnorr.compact`, compiler 0.31.1)
   with three circuits: verify and register, rotate the oracle key, revoke a
   subject. Schnorr signature verification is composed in-circuit, because the
-  pinned compiler has no built-in for it (deviation D-1 in `SPIKE-REPORT.md`).
+  pinned compiler has no built-in for it (deviation D-1 in `spike-report.md`).
 - Block-time expiry, single-use nullifiers, revocation epochs that only move
   forward, and statuses that can be extended but never shortened.
 - An oracle signer with golden test vectors, and a subject-ownership proof so the
@@ -44,7 +44,7 @@ A frozen specification for private eligibility attestations on Midnight
 **On-chain, on Midnight Preview**
 - Two contract deployments, one per policy.
 - Five settled transactions: two deployments, three attestations (including one
-  through the Lace browser wallet), and one revocation. See `PROOF.md`.
+  through the Lace browser wallet), and one revocation. See `proof.md`.
 
 **Quality**
 - 200 offline tests, 55 on-chain evidence checks (`npm run verify:onchain`).
@@ -62,7 +62,7 @@ The income policy keeps the original design and says so in its disclosure.
 
 ### Known limits at the end of Wave 1
 
-See the "Known limits" section of `README.md`. The main ones: development
+See the "Known limits" section of `../README.md`. The main ones: development
 sign-in and an oracle key held in memory; a signed record proves the document,
 not that the uploader is the person in it; a local proof server is needed to
 submit from the browser; no independent audit; no users or partners yet.

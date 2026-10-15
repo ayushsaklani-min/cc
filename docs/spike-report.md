@@ -291,7 +291,7 @@ key unwrapped inside a restricted signer process or a TEE.
 | `scripts/compile.mjs` | Compiler-version gate (exact 0.31.1) and compile |
 | `scripts/check-expiry-assertion.mjs` | Build fails if either time assertion is missing or commented out |
 | `test/` | 139 simulator and unit tests, 3 proof-server tests, golden vectors |
-| `SECURITY.md`, `THREAT-MODEL.md`, `PRIVACY-BOUNDARY.md` | From the spec, with the deviations |
+| `../SECURITY.md`, `threat-model.md`, `privacy-boundary.md` | From the spec, with the deviations |
 
 `npm run ci` (expiry gate, compile with keys, typecheck, tests): exit 0,
 139 passed, 3 skipped (the proof-server tests, which need `PROOF_SERVER_URL`;

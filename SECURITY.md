@@ -2,8 +2,8 @@
 
 **Status: development preview.** This code has not been independently audited. It
 runs on the Midnight Preview test network only and must not be deployed to
-Mainnet in its current state. PROOF.md lists what has settled on-chain;
-SPIKE-REPORT.md records what has and has not been verified.
+Mainnet in its current state. docs/proof.md lists what has settled on-chain;
+docs/spike-report.md records what has and has not been verified.
 
 ## Reporting
 

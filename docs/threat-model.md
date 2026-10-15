@@ -18,7 +18,7 @@ public network yet.
   documents.
 - **The Schnorr verification is composed in this repository** from ledger-8
   curve builtins, because the standard-library verifier does not exist on
-  ledger 8 (SPIKE-REPORT.md, D-1). It has had no independent review.
+  ledger 8 (spike-report.md, D-1). It has had no independent review.
 
 ## Threats and mitigations
 

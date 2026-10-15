@@ -1,54 +1,23 @@
-# Remotion video
+# Product film
 
-<p align="center">
-  <a href="https://github.com/remotion-dev/logo">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://github.com/remotion-dev/logo/raw/main/animated-logo-banner-dark.apng">
-      <img alt="Animated Remotion Logo" src="https://github.com/remotion-dev/logo/raw/main/animated-logo-banner-light.gif">
-    </picture>
-  </a>
-</p>
+Source of the CipherComply film, made with [Remotion](https://www.remotion.dev).
+The rendered film is at https://youtu.be/QPNuGXtu6nM.
 
-Welcome to your Remotion project!
-
-## Commands
-
-**Install Dependencies**
-
-```console
-npm i --loglevel=error
+```
+npm install
+npx remotion studio                        # preview and edit
+npx remotion render Full out/film.mp4      # render the two-part film
 ```
 
-**Start Preview**
+Compositions: `CipherComply` (the product film), `LiveDemo` (narrated
+screenshots of a real run) and `Full` (both, with chapter titles).
 
-```console
-npm run dev
-```
+Generated assets:
 
-**Render video**
-
-```console
-npx remotion render
-```
-
-**Upgrade Remotion**
-
-```console
-npx remotion upgrade
-```
-
-## Docs
-
-Get started with Remotion by reading the [fundamentals page](https://www.remotion.dev/docs/the-fundamentals).
-
-## Help
-
-We provide help on our [Discord server](https://discord.gg/6VzzNDwUwV).
-
-## Issues
-
-Found an issue with Remotion? [File an issue here](https://github.com/remotion-dev/remotion/issues/new).
-
-## License
-
-Note that for some entities a company license is needed. [Read the terms here](https://github.com/remotion-dev/remotion/blob/main/LICENSE.md).
+- Music is synthesised by `node scripts/make-music.mjs <seconds> <file>` into
+  `public/` and is not committed. Generate `music.wav` (127) and
+  `music-demo.wav` (68) before rendering.
+- Narration is generated with Gemini text-to-speech by
+  `scripts/make-voiceover.mjs` (needs `GEMINI_API_KEY` in the repository's
+  `.env`) and checked with `scripts/transcribe-voiceover.mjs`. The clips are
+  committed, so rendering does not need the key.

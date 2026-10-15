@@ -7,7 +7,7 @@ const D = DUR.proof;
 const k = (x: number) => Math.round(x * D);
 
 /**
- * Results recorded in SPIKE-REPORT.md from runs against Midnight Preview.
+ * Results recorded in docs/spike-report.md from runs against Midnight Preview.
  * Identifiers are shortened, not altered. `at` follows the narration.
  */
 const EVIDENCE = [

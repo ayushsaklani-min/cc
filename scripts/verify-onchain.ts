@@ -6,7 +6,7 @@
 //   npx tsx scripts/verify-onchain.ts <file> --record   rewrite its ledger snapshot from the chain
 //
 // The transactions in the evidence file were produced by the runs described in
-// SPIKE-REPORT.md. Recording refreshes only what the chain itself reports for
+// docs/spike-report.md. Recording refreshes only what the chain itself reports for
 // them (hash, block, action) and the ledger snapshot; it never invents entries.
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
