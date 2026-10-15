@@ -11,7 +11,10 @@ jobs:
   verify:
     runs-on: ubuntu-24.04
     steps:
+      # Full history: the secret scan reads every commit in a push, not just the last one.
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
